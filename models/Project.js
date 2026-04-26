@@ -38,6 +38,12 @@ const projectSchema = new mongoose.Schema(
       ref: "Bid",
       default: null,
     },
+
+    category: {
+      type: String,
+      enum: ["tutoring", "design", "development", "writing"],
+      required: true,
+    },
   },
   { timestamps: true }
 );
