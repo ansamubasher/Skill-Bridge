@@ -27,31 +27,16 @@ const userSchema = new mongoose.Schema(
     department: String,
     academicYear: String,
 
-    skills: [String],
-
-    bio: {
-      type: String,
-      default: "",
+    // Reference to user's profile document
+    profile: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Profile",
     },
 
-    availability: {
-      type: String,
-      enum: ["available", "busy", "offline"],
-      default: "available",
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
-
-    portfolio: [
-      {
-        type: String, // links or file URLs
-      },
-    ],
-
-    completedProjects: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Project",
-      },
-    ],
   },
   { timestamps: true }
 );
