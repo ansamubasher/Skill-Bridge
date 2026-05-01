@@ -1,14 +1,7 @@
-import express from "express";
-import {
-  getMyProfile,
-  getProfileById,
-  updateProfile,
-  addSkill,
-  removeSkill,
-  addPortfolioItem,
-  removePortfolioItem,
-} from "../controllers/profileController.js";
-import { authenticateToken } from "../midllewares/authMiddleware.js";
+
+const express = require("express");
+const { getMyProfile, getProfileById, updateProfile, addSkill,removeSkill,addPortfolioItem, removePortfolioItem } = require("../controllers/profileController.js");
+const { authenticateToken } = require("../midllewares/authMiddleware.js");
 
 const router = express.Router();
 
@@ -23,4 +16,4 @@ router.delete("/portfolio", authenticateToken, removePortfolioItem); // DELETE /
 // Public route
 router.get("/:userId", getProfileById); // GET /profiles/:userId - View another user's profile
 
-export default router;
+module.exports = router;

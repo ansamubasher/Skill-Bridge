@@ -1,20 +1,22 @@
-import express from "express";
-import {
+const express = require("express");
+
+const {
   getProfile,
   getUserById,
   updateUserInfo,
   updatePassword,
-} from "../controllers/userController.js";
-import { authenticateToken } from "../midllewares/authMiddleware.js";
+} = require("../controllers/userController");
+
+const { authenticateToken } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
 // Protected routes (require authentication)
-router.get("/profile", authenticateToken, getProfile); // GET /users/profile - Get authenticated user's account info
-router.put("/info", authenticateToken, updateUserInfo); // PUT /users/info - Update name, department, academicYear
-router.put("/password", authenticateToken, updatePassword); // PUT /users/password - Change password
+router.get("/profile", authenticateToken, getProfile);
+router.put("/info", authenticateToken, updateUserInfo);
+router.put("/password", authenticateToken, updatePassword);
 
 // Public route
-router.get("/:id", getUserById); // GET /users/:id - View public user info
+router.get("/:id", getUserById);
 
-export default router;
+module.exports = router;

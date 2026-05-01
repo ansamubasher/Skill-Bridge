@@ -1,14 +1,14 @@
-import express from "express";
-import { register, login, logout } from "../controllers/authController.js";
-import { authenticateToken } from "../midllewares/authMiddleware.js";
+const express = require("express");
+
+const { register, login, logout } = require("../controllers/authController.js");
+const { authenticateToken } = require("../midllewares/authMiddleware.js");
 
 const router = express.Router();
 
-// Public routes
+console.log("about ti run route reg")
 router.post("/register", register); // POST /auth/register
-router.post("/login", login); // POST /auth/login
+router.post("/login", login);       // POST /auth/login
 
-// Protected routes
 router.post("/logout", authenticateToken, logout); // POST /auth/logout
 
-export default router;
+module.exports = router;
