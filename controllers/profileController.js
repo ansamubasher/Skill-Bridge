@@ -1,21 +1,21 @@
-import User from "../models/User.js";
-import Profile from "../models/Profile.js";
+const User = require("../models/User");
+const Profile = require("../models/Profile");
 
 // Get current user's profile (requires authentication)
-export const getMyProfile = async (req, res) => {
+const getMyProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
     // Find user's profile
     const user = await User.findById(userId);
-    if (!user || !user.profile) {
+    if (!user ) {
       return res.status(404).json({
         success: false,
         message: "Profile not found",
       });
     }
 
-    const profile = await Profile.findById(user.profile).populate("completedProjects", "title");
+    const profile = await Profile.findById(user).populate("completedProjects");
 
     res.status(200).json({
       success: true,
@@ -31,11 +31,10 @@ export const getMyProfile = async (req, res) => {
 };
 
 // Get another user's profile by their user ID (public endpoint)
-export const getProfileById = async (req, res) => {
+const getProfileById = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Validate MongoDB ObjectId format
     if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
@@ -51,7 +50,6 @@ export const getProfileById = async (req, res) => {
       });
     }
 
-    // Check if profile is public
     const profile = await Profile.findById(user.profile);
     if (!profile.isPublic) {
       return res.status(403).json({
@@ -82,13 +80,12 @@ export const getProfileById = async (req, res) => {
   }
 };
 
-// Update user profile (bio, skills, portfolio, availability, coverImage)
-export const updateProfile = async (req, res) => {
+// Update user profile
+const updateProfile = async (req, res) => {
   try {
     const { bio, portfolio, availability, coverImage } = req.body;
     const userId = req.user.id;
 
-    // Find user's profile
     const user = await User.findById(userId);
     if (!user || !user.profile) {
       return res.status(404).json({
@@ -97,14 +94,12 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Build update object
     const updateData = {};
     if (bio !== undefined) updateData.bio = bio;
     if (portfolio !== undefined) updateData.portfolio = portfolio;
     if (availability) updateData.availability = availability;
     if (coverImage !== undefined) updateData.coverImage = coverImage;
 
-    // Validate availability enum
     if (availability && !["available", "busy", "offline"].includes(availability)) {
       return res.status(400).json({
         success: false,
@@ -112,10 +107,11 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    const updatedProfile = await Profile.findByIdAndUpdate(user.profile, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedProfile = await Profile.findByIdAndUpdate(
+      user.profile,
+      updateData,
+      { new: true, runValidators: true }
+    );
 
     res.status(200).json({
       success: true,
@@ -131,8 +127,8 @@ export const updateProfile = async (req, res) => {
   }
 };
 
-// Add skill to profile's skills array
-export const addSkill = async (req, res) => {
+// Add skill
+const addSkill = async (req, res) => {
   try {
     const { skill } = req.body;
     const userId = req.user.id;
@@ -144,7 +140,6 @@ export const addSkill = async (req, res) => {
       });
     }
 
-    // Find user's profile
     const user = await User.findById(userId);
     if (!user || !user.profile) {
       return res.status(404).json({
@@ -153,7 +148,6 @@ export const addSkill = async (req, res) => {
       });
     }
 
-    // Add skill if not already exists ($addToSet prevents duplicates)
     const updatedProfile = await Profile.findByIdAndUpdate(
       user.profile,
       { $addToSet: { skills: skill.trim() } },
@@ -174,8 +168,8 @@ export const addSkill = async (req, res) => {
   }
 };
 
-// Remove skill from profile's skills array
-export const removeSkill = async (req, res) => {
+// Remove skill
+const removeSkill = async (req, res) => {
   try {
     const { skill } = req.body;
     const userId = req.user.id;
@@ -187,7 +181,6 @@ export const removeSkill = async (req, res) => {
       });
     }
 
-    // Find user's profile
     const user = await User.findById(userId);
     if (!user || !user.profile) {
       return res.status(404).json({
@@ -196,7 +189,6 @@ export const removeSkill = async (req, res) => {
       });
     }
 
-    // Remove skill from array ($pull removes matching elements)
     const updatedProfile = await Profile.findByIdAndUpdate(
       user.profile,
       { $pull: { skills: skill } },
@@ -217,8 +209,8 @@ export const removeSkill = async (req, res) => {
   }
 };
 
-// Add portfolio item to profile
-export const addPortfolioItem = async (req, res) => {
+// Add portfolio
+const addPortfolioItem = async (req, res) => {
   try {
     const { url } = req.body;
     const userId = req.user.id;
@@ -230,7 +222,6 @@ export const addPortfolioItem = async (req, res) => {
       });
     }
 
-    // Find user's profile
     const user = await User.findById(userId);
     if (!user || !user.profile) {
       return res.status(404).json({
@@ -239,7 +230,6 @@ export const addPortfolioItem = async (req, res) => {
       });
     }
 
-    // Add portfolio item
     const updatedProfile = await Profile.findByIdAndUpdate(
       user.profile,
       { $addToSet: { portfolio: url } },
@@ -260,8 +250,8 @@ export const addPortfolioItem = async (req, res) => {
   }
 };
 
-// Remove portfolio item from profile
-export const removePortfolioItem = async (req, res) => {
+// Remove portfolio
+const removePortfolioItem = async (req, res) => {
   try {
     const { url } = req.body;
     const userId = req.user.id;
@@ -273,7 +263,6 @@ export const removePortfolioItem = async (req, res) => {
       });
     }
 
-    // Find user's profile
     const user = await User.findById(userId);
     if (!user || !user.profile) {
       return res.status(404).json({
@@ -282,7 +271,6 @@ export const removePortfolioItem = async (req, res) => {
       });
     }
 
-    // Remove portfolio item
     const updatedProfile = await Profile.findByIdAndUpdate(
       user.profile,
       { $pull: { portfolio: url } },
@@ -301,4 +289,14 @@ export const removePortfolioItem = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+module.exports = {
+  getMyProfile,
+  getProfileById,
+  updateProfile,
+  addSkill,
+  removeSkill,
+  addPortfolioItem,
+  removePortfolioItem,
 };

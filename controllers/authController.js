@@ -1,14 +1,16 @@
-import User from "../models/User.js";
-import Profile from "../models/Profile.js";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-
+const User = require("../models/User.js");
+const Profile = require("../models/Profile.js");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 // Register a new user
-export const register = async (req, res) => {
+const register = async (req, res) => {
   try {
+    console.log("inside controller")
+
+    console.log("Mongoose state:", mongoose.connection.readyState);
     const { name, email, password, role, department, academicYear } = req.body;
 
-    // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -16,7 +18,6 @@ export const register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
@@ -25,10 +26,8 @@ export const register = async (req, res) => {
       });
     }
 
-    // Hash password using bcrypt (10 rounds for security)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
     const user = new User({
       name,
       email,
@@ -40,25 +39,21 @@ export const register = async (req, res) => {
 
     await user.save();
 
-    // Create corresponding profile for the user
     const profile = new Profile({
       user: user._id,
     });
 
     await profile.save();
 
-    // Link profile to user
     user.profile = profile._id;
     await user.save();
 
-    // Generate JWT token (expires in 7 days)
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // Remove password from response
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -78,11 +73,12 @@ export const register = async (req, res) => {
 };
 
 // Login user
-export const login = async (req, res) => {
+const login = async (req, res) => {
   try {
+    console.log(req.body);
+
     const { email, password } = req.body;
 
-    // Validate required fields
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -90,7 +86,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
@@ -99,7 +94,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Compare provided password with hashed password in database
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -108,14 +102,12 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // Remove password from response
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -134,12 +126,9 @@ export const login = async (req, res) => {
   }
 };
 
-// Logout (client-side token deletion, but can be used for token blacklisting in future)
-export const logout = async (req, res) => {
+// Logout
+const logout = async (req, res) => {
   try {
-    // Client typically deletes token from localStorage/sessionStorage
-    // Backend can implement token blacklisting if needed in future
-
     res.status(200).json({
       success: true,
       message: "Logout successful",
@@ -151,4 +140,10 @@ export const logout = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+module.exports = {
+  register,
+  login,
+  logout,
 };

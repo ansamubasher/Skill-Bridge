@@ -1,8 +1,8 @@
-import User from "../models/User.js";
-import bcrypt from "bcrypt";
+const User = require("../models/User.js");
+const bcrypt = require("bcrypt");
 
 // Get current user's account info (requires authentication)
-export const getProfile = async (req, res) => {
+const getProfile = async (req, res) => {
   try {
     // req.user is set by authenticateToken middleware
     const user = await User.findById(req.user.id).select("-password");
@@ -28,11 +28,10 @@ export const getProfile = async (req, res) => {
 };
 
 // Get user by ID (public endpoint - no sensitive data)
-export const getUserById = async (req, res) => {
+const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate MongoDB ObjectId format
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
@@ -64,8 +63,8 @@ export const getUserById = async (req, res) => {
   }
 };
 
-// Update user account info (name, department, academicYear)
-export const updateUserInfo = async (req, res) => {
+// Update user account info
+const updateUserInfo = async (req, res) => {
   try {
     const { name, department, academicYear } = req.body;
     const userId = req.user.id;
@@ -101,13 +100,12 @@ export const updateUserInfo = async (req, res) => {
   }
 };
 
-// Update user password (requires authentication)
-export const updatePassword = async (req, res) => {
+// Update password
+const updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.id;
 
-    // Validate required fields
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         success: false,
@@ -115,7 +113,6 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    // Find user with password field
     const user = await User.findById(userId);
 
     if (!user) {
@@ -125,7 +122,6 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    // Verify current password
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -134,10 +130,8 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password
     user.password = hashedPassword;
     await user.save();
 
@@ -152,4 +146,11 @@ export const updatePassword = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+module.exports = {
+  getProfile,
+  getUserById,
+  updateUserInfo,
+  updatePassword,
 };
