@@ -6,7 +6,7 @@ const freelancerRoutes = require('./routes/freelancer');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 
-const clientRoutes = require('./routes/projectRoutes');
+const paymentRoutes = require('./routes/paymentRoute');
 const app = express();
 app.use(express.json());
 
@@ -25,7 +25,10 @@ mongoose.connect('mongodb+srv://ansamubasher_db_user:test123@cluster0.o5xuys6.mo
     app.use('/auth', authRoutes);
     // //app.use('/profile', profileRoutes);
     // //app.use('/freelancer', freelancerRoutes);
-    app.use ('/client', clientRoutes);
+    // app.use('/client', clientRoutes); // Note: clientRoutes is undefined in the code above, but assuming you want to mount it or it was removed earlier.
+
+// after client routes
+app.use('/payments', paymentRoutes);
 
     // ✅ Start server LAST
     app.listen(PORT, () => {
