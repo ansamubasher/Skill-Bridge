@@ -1,30 +1,11 @@
 const mongoose = require("mongoose");
 
-const messageSchema = new mongoose.Schema(
-  {
-    sender: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+const paymentSchema = new mongoose.Schema({
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  freelancerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project", required: true },
+  amount: { type: Number, required: true },
+  status: { type: String, enum: ["requested", "reviewed", "paid"], default: "requested" },
+}, { timestamps: true });
 
-    receiver: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
-    project: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Project",
-    },
-
-    message: {
-      type: String,
-      required: true,
-    },
-  },
-  { timestamps: true }
-);
-
-module.exports = mongoose.model("Message", messageSchema);
+module.exports = mongoose.model("Payment", paymentSchema);
