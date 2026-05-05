@@ -8,6 +8,6 @@ const mongoose = require('mongoose');
 module.exports = (req, res, next) => {
   // Use a fixed ObjectId for the client user (replace with a real user id if you have one)
   const dummyUserId = new mongoose.Types.ObjectId('60c72b2f9b1e8c001c8d4e01');
-  req.user = { id: dummyUserId };
+  req.user = { _id: dummyUserId };
   next();
 };
