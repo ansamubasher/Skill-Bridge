@@ -1,0 +1,133 @@
+/* ─── Shared Auth CSS ────────────────────────────────────────────────────── */
+
+.auth-logo {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-error {
+  background-color: rgba(255, 77, 77, 0.1);
+  color: var(--error);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* ─── Login Modal ────────────────────────────────────────────────────────── */
+
+.auth-container-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-modal {
+  background-color: #d8d8d8; /* Matches the Figma grey */
+  padding: 40px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+
+.login-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.login-actions button {
+  flex: 1;
+}
+
+/* ─── Split Screen Register ──────────────────────────────────────────────── */
+
+.split-screen-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.split-left {
+  flex: 1;
+  /* Uses auth-gradient-bg */
+}
+
+.split-right {
+  flex: 1;
+  background-color: #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.register-content {
+  width: 100%;
+  max-width: 480px;
+}
+
+.register-header {
+  margin-bottom: 40px;
+}
+
+.register-header .auth-logo {
+  text-align: left;
+  margin-bottom: 5px;
+}
+
+.auth-tagline {
+  color: #666;
+  font-size: 14px;
+}
+
+.register-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.password-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #888;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.login-link-container {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.text-primary {
+  color: var(--primary);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .split-screen-container {
+    flex-direction: column;
+  }
+  .split-left {
+    display: none; /* Hide gradient on mobile to save space */
+  }
+}

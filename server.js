@@ -5,10 +5,14 @@ const mongoose = require('mongoose');
 const freelancerRoutes = require('./routes/freelancer');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const paymentRoutes = require('./routes/paymentRoute');
 const messageRoutes = require('./routes/messageRoutes');
+const cors = require('cors');
+
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -24,7 +28,8 @@ mongoose.connect('mongodb+srv://ansamubasher_db_user:test123@cluster0.o5xuys6.mo
 
     // ✅ Register ALL routes AFTER DB is ready
     app.use('/auth', authRoutes);
-    // //app.use('/profile', profileRoutes);
+    app.use('/profiles', profileRoutes);
+    app.use('/users', userRoutes);
     // //app.use('/freelancer', freelancerRoutes);
     // app.use('/client', clientRoutes); 
     app.use('/payments', paymentRoutes);
