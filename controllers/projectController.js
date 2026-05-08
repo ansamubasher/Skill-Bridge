@@ -17,6 +17,13 @@ const createProject = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid category. Must be one of: ' + validCategories.join(', ') });
     }
 
+    if (deadline) {
+      const dl = new Date(deadline);
+      if (isNaN(dl.getTime()) || dl <= new Date()) {
+        return res.status(400).json({ success: false, message: 'Deadline must be a future date' });
+      }
+    }
+
     const project = new Project({
       client: req.user.id || req.user._id,
       title, description, budget, requiredSkills, deadline, category,
@@ -152,6 +159,7 @@ const placeBid = async (req, res) => {
     if (!project)                  return res.status(404).json({ success: false, message: 'Project not found' });
     if (project.status !== 'open') return res.status(400).json({ success: false, message: 'Project is no longer accepting bids' });
     if (!bidAmount)                return res.status(400).json({ success: false, message: 'bidAmount is required' });
+    if (Number(bidAmount) <= 0)    return res.status(400).json({ success: false, message: 'Bid amount must be a positive number' });
 
     // Prevent duplicate bids
     const existing = await Bid.findOne({ project: req.params.id, freelancer: freelancerId });

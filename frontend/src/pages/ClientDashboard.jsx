@@ -373,6 +373,8 @@ const ClientDashboard = () => {
             </div>
           </div>
         </div>
+        </>
+          )}
       </div>
 
       {/* Bids Modal */}
@@ -429,10 +431,15 @@ const ClientDashboard = () => {
                       </span>
                     }
                     description={
-                      <Space direction="vertical" size={2}>
-                        <Text style={{ fontSize: '0.82rem', color: '#6b7280' }}>
-                          {bid.coverLetter || bid.proposal || 'No cover letter provided.'}
-                        </Text>
+                      <Space direction="vertical" size={4}>
+                        {(bid.coverLetter || bid.proposal) && (
+                          <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 6, padding: '8px 10px', marginBottom: 4 }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: '#ea580c', marginBottom: 3 }}>COVER LETTER</div>
+                            <Text style={{ fontSize: '0.82rem', color: '#374151', lineHeight: 1.5 }}>
+                              {bid.coverLetter || bid.proposal}
+                            </Text>
+                          </div>
+                        )}
                         <Space size={12}>
                           <Text strong style={{ color: '#E85D24', fontSize: '0.85rem' }}>
                             <DollarOutlined /> ${bid.bidAmount ?? bid.amount ?? '—'}

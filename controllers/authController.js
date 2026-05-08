@@ -18,6 +18,13 @@ const register = async (req, res) => {
       });
     }
 
+    if (!email.toLowerCase().endsWith('@lhr.nu.edu.pk')) {
+      return res.status(400).json({
+        success: false,
+        message: "Only university email addresses (@lhr.nu.edu.pk) are allowed",
+      });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({

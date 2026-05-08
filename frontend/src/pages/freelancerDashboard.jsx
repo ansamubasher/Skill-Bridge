@@ -146,6 +146,7 @@ export default function FreelancerDashboard({ onSelectProject }) {
   const [activeCategory, setActiveCategory] = useState('All');
   const [savedJobs, setSavedJobs]     = useState(new Set());
   const [bidModal, setBidModal]       = useState(null);
+  const [contracts, setContracts]     = useState([]);
 
   const token = localStorage.getItem('sb_token');
 
@@ -170,6 +171,21 @@ export default function FreelancerDashboard({ onSelectProject }) {
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
+  // Fetch freelancer contracts
+  const fetchContracts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/projects/contracts/mine', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setContracts(data.contracts || []);
+      }
+    } catch { /* silent */ }
+  }, [token]);
+
+  useEffect(() => { fetchContracts(); }, [fetchContracts]);
+
   // Search
   useEffect(() => {
     if (!search.trim()) {
@@ -189,13 +205,17 @@ export default function FreelancerDashboard({ onSelectProject }) {
   }, [search]); // only re-run when search changes, NOT fetchProjects
 
   // Submit bid via real API
-  const handleBid = async (projectId, amount) => {
+  const handleBid = async (projectId, amount, coverLetter) => {
     try {
-      await fetch(`/api/projects/${projectId}/bids`, {
+      const res = await fetch(`/api/projects/${projectId}/bids`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bidAmount: Number(amount) }),
+        body: JSON.stringify({ bidAmount: Number(amount), coverLetter: coverLetter || '' }),
       });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.message || 'Failed to place bid');
+      }
     } catch (err) {
       console.error('Bid failed:', err);
     }
@@ -290,6 +310,45 @@ export default function FreelancerDashboard({ onSelectProject }) {
         <div>
           <ProfileCard user={auth?.user} />
           <BidsCard count={auth?.user?.bidsAvailable} />
+
+          {/* My Contracts / Accepted Bids */}
+          <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', padding: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              📄 My Contracts
+              {contracts.length > 0 && (
+                <span style={{ background: '#f97316', color: '#fff', borderRadius: 999, fontSize: 11, fontWeight: 700, padding: '1px 7px' }}>
+                  {contracts.length}
+                </span>
+              )}
+            </div>
+            {contracts.length === 0 ? (
+              <div style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '12px 0' }}>
+                No contracts yet. Keep bidding!
+              </div>
+            ) : (
+              contracts.map((c, i) => (
+                <div key={c._id || i} style={{ borderRadius: 8, border: '1px solid #e5e7eb', padding: '10px 12px', marginBottom: 8, background: '#fafafa' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#111827', marginBottom: 4 }}>
+                    {c.project?.title || 'Project'}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, color: '#6b7280' }}>Client: {c.client?.name || '—'}</span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '2px 8px',
+                      background: c.status === 'active' ? '#f0fdf4' : '#f9fafb',
+                      color: c.status === 'active' ? '#16a34a' : '#6b7280',
+                      border: `1px solid ${c.status === 'active' ? '#bbf7d0' : '#d1d5db'}`,
+                    }}>
+                      {c.status?.toUpperCase() || 'ACTIVE'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#f97316' }}>
+                    💰 ${c.agreedAmount}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 

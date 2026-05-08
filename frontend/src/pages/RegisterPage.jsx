@@ -29,6 +29,10 @@ const RegisterPage = () => {
       return setError('Passwords do not match');
     }
 
+    if (!formData.email.toLowerCase().endsWith('@lhr.nu.edu.pk')) {
+      return setError('Only university email addresses ending with @lhr.nu.edu.pk are allowed');
+    }
+
     setLoading(true);
     try {
       await registerUser({
@@ -127,7 +131,9 @@ const RegisterPage = () => {
             <div className="form-group">
               <label className="form-label">Email address* (University Address ONLY)</label>
               <input type="email" name="email" className="input-field"
-                placeholder="eg@lhr.nu.edu.pk"
+                placeholder="yourname@lhr.nu.edu.pk"
+                pattern=".+@lhr\.nu\.edu\.pk"
+                title="Please use your university email (e.g. name@lhr.nu.edu.pk)"
                 value={formData.email} onChange={handleChange} required />
             </div>
 

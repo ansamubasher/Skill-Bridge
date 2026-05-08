@@ -11,9 +11,14 @@ const BidModal = ({ open, project, onClose, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!amount) return;
+    const numAmount = Number(amount);
+    if (numAmount <= 0) {
+      alert('Bid amount must be greater than $0');
+      return;
+    }
     setSubmitting(true);
     try {
-      await onSubmit(project.projectId, amount);
+      await onSubmit(project.projectId, numAmount, coverLetter);
       setDone(true);
       setTimeout(() => { setDone(false); setAmount(''); setCoverLetter(''); onClose(); }, 1500);
     } finally {
@@ -47,6 +52,7 @@ const BidModal = ({ open, project, onClose, onSubmit }) => {
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Your Bid Amount ($) *</label>
                 <input type="number" placeholder="e.g. 250" value={amount} onChange={e => setAmount(e.target.value)} required
+                  min="1"
                   style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #e5e7eb', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                   onFocus={e => e.target.style.borderColor = '#f97316'}
                   onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
