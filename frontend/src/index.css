@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* SkillBridge Design Tokens */
+:root {
+  --sb-orange: #E85D24;
+  --sb-orange-light: #f97316;
+  --sb-orange-hover: #c94d1a;
+  --sb-dark: #1a1a1a;
+  --sb-gray-bg: #f5f5f5;
+  --sb-border: #e0e0e0;
+  --sb-text-muted: #6b7280;
+  --sb-card-bg: #fff;
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: #fafafa;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* SkillBridge brand logo styles */
+.sb-logo-skill {
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+}
+
+.sb-logo-bridge {
+  font-weight: 400;
+  color: var(--sb-orange);
+  font-style: italic;
+}
+
+/* Navbar */
+.sb-navbar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-bottom: 1px solid var(--sb-border);
+  padding: 0 2rem;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 2rem;
+}
+
+.sb-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.sb-nav-link {
+  color: var(--sb-orange);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.sb-nav-link:hover {
+  color: var(--sb-orange-hover);
+}
+
+.sb-nav-link-dark {
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.sb-nav-link-dark:hover {
+  color: var(--sb-orange);
+}
+
+/* Orange button */
+.sb-btn-primary {
+  background: var(--sb-orange);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.sb-btn-primary:hover {
+  background: var(--sb-orange-hover);
+  transform: translateY(-1px);
+}
+
+.sb-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Outline button */
+.sb-btn-outline {
+  background: transparent;
+  color: var(--sb-orange);
+  border: 1.5px solid var(--sb-orange);
+  border-radius: 6px;
+  padding: 7px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sb-btn-outline:hover {
+  background: var(--sb-orange);
+  color: #fff;
+}
+
+/* Card */
+.sb-card {
+  background: #fff;
+  border: 1px solid var(--sb-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: box-shadow 0.2s;
+}
+
+.sb-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* Status badges */
+.sb-badge-inprogress {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fff7ed;
+  color: var(--sb-orange);
+  border: 1px solid #fed7aa;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sb-badge-open {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sb-badge-closed {
+  background: #f9fafb;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Ant Design overrides for SkillBridge theme */
+.ant-btn-primary {
+  background-color: var(--sb-orange) !important;
+  border-color: var(--sb-orange) !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: var(--sb-orange-hover) !important;
+  border-color: var(--sb-orange-hover) !important;
+}
+
+.ant-table-thead > tr > th {
+  background: #f9fafb !important;
+  color: #374151 !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ant-tag {
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+}
+
+/* Page layouts */
+.sb-page {
+  min-height: calc(100vh - 64px);
+  background: #fafafa;
+}
+
+.sb-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
