@@ -1,31 +1,40 @@
-const express = require("express");
-
-const { authenticateToken } = require("../midllewares/authMiddleware.js");
+const express = require('express');
+const { authenticateToken } = require('../midllewares/authMiddleware.js');
 const {
   createProject,
+  getAllProjects,
   getMyProjects,
   getProjectById,
   updateProject,
   deleteProject,
   updateProjectStatus,
   getProjectBids,
+  placeBid,
   acceptProjectBid,
-} = require("../controllers/projectController");
-
+  getMyContracts,
+} = require('../controllers/projectController');
 
 const router = express.Router();
 
-// Apply authentication to all project routes
-router.use(authenticateToken);
+// ── Contract ──────────────────────────────────────────────────────────────────
+router.get('/contracts/mine', authenticateToken, getMyContracts);   // GET /projects/contracts/mine
 
-// Define routes
-router.post("/", authenticateToken,createProject);
-router.get("/my", authenticateToken, getMyProjects);
-router.get("/:id",  authenticateToken, getProjectById);
-router.put("/:id", authenticateToken, updateProject);
-router.delete("/:id", authenticateToken, deleteProject);
-router.patch("/:id/status",  authenticateToken, updateProjectStatus);
-router.get("/:id/bids", authenticateToken,  getProjectBids);
-router.patch("/:id/accept-bid", authenticateToken,  acceptProjectBid);
+// ── Freelancer browse ─────────────────────────────────────────────────────────
+router.get('/', authenticateToken, getAllProjects);                  // GET /projects
+
+// ── Client CRUD ───────────────────────────────────────────────────────────────
+router.post('/', authenticateToken, createProject);                 // POST /projects
+router.get('/my', authenticateToken, getMyProjects);                // GET /projects/my  ← MUST be before /:id
+
+// ── Single project ────────────────────────────────────────────────────────────
+router.get('/:id',             authenticateToken, getProjectById);
+router.put('/:id',             authenticateToken, updateProject);
+router.delete('/:id',          authenticateToken, deleteProject);
+router.patch('/:id/status',    authenticateToken, updateProjectStatus);
+
+// ── Bids ──────────────────────────────────────────────────────────────────────
+router.get('/:id/bids',        authenticateToken, getProjectBids);  // GET  /projects/:id/bids
+router.post('/:id/bids',       authenticateToken, placeBid);        // POST /projects/:id/bids
+router.patch('/:id/accept-bid',authenticateToken, acceptProjectBid);// PATCH /projects/:id/accept-bid
 
 module.exports = router;

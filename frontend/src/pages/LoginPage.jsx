@@ -20,8 +20,10 @@ const LoginPage = () => {
     
     try {
       const res = await loginUser({ email, password });
-      login(res.data.user, res.data.token);
-      navigate('/profile');
+      const userData = res.data.user;
+      login(userData, res.data.token);
+      const isClient = userData?.role?.includes('client');
+      navigate(isClient ? '/dashboard' : '/freelancer-dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {

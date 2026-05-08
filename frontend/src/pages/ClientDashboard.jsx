@@ -28,13 +28,14 @@ const ClientDashboard = () => {
 
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [contracts, setContracts] = useState([]);
+  const [activeTab, setActiveTab] = useState('projects');
 
   const [bidsModal, setBidsModal] = useState({ open: false, projectId: null, projectTitle: '' });
   const [bids, setBids] = useState([]);
   const [loadingBids, setLoadingBids] = useState(false);
   const [acceptingBid, setAcceptingBid] = useState(null);
 
-  // ── Fetch my projects ──────────────────────────────────────────────────────
   const fetchProjects = useCallback(async () => {
     setLoadingProjects(true);
     try {
@@ -47,7 +48,14 @@ const ClientDashboard = () => {
     }
   }, [api]);
 
-  useEffect(() => { fetchProjects(); }, [fetchProjects]);
+  const fetchContracts = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get('/projects/contracts/mine');
+      setContracts(res.data?.contracts || []);
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => { fetchProjects(); fetchContracts(); }, [fetchProjects, fetchContracts]);
 
   // ── Fetch bids for a project ───────────────────────────────────────────────
   const openBidsModal = async (projectId, projectTitle) => {
@@ -69,9 +77,10 @@ const ClientDashboard = () => {
     setAcceptingBid(bidId);
     try {
       await axiosInstance.patch(`/projects/${bidsModal.projectId}/accept-bid`, { bidId });
-      api.success({ message: 'Bid Accepted!', description: 'The freelancer has been notified.', placement: 'topRight', duration: 4 });
+      api.success({ message: 'Bid Accepted! 🎉', description: 'A contract has been created automatically.', placement: 'topRight', duration: 4 });
       setBidsModal({ open: false, projectId: null, projectTitle: '' });
       fetchProjects();
+      fetchContracts();
     } catch (err) {
       api.error({ message: 'Failed to accept bid', description: err.message, placement: 'topRight' });
     } finally {
@@ -204,7 +213,45 @@ const ClientDashboard = () => {
           </Space>
         </div>
 
-        {/* Stats cards */}
+        {/* Tab switcher */}
+          <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '2px solid #e5e7eb' }}>
+            {[{ key: 'projects', label: '📋 My Projects' }, { key: 'contracts', label: `📄 Contracts (${contracts.length})` }].map(t => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                style={{ padding: '10px 22px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: activeTab === t.key ? 700 : 400, color: activeTab === t.key ? '#E85D24' : '#6b7280', borderBottom: activeTab === t.key ? '2px solid #E85D24' : '2px solid transparent', marginBottom: -2 }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === 'contracts' ? (
+            <div className="sb-card">
+              {contracts.length === 0 ? (
+                <Empty description="No contracts yet — accept a bid to create one" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              ) : (
+                contracts.map((c, i) => (
+                  <div key={c._id || i} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: 20, marginBottom: 12, background: '#fafafa' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>{c.project?.title || 'Project'}</div>
+                      <span style={{ background: c.status === 'active' ? '#f0fdf4' : '#f9fafb', color: c.status === 'active' ? '#16a34a' : '#6b7280', border: `1px solid ${c.status === 'active' ? '#bbf7d0' : '#d1d5db'}`, borderRadius: 999, padding: '2px 12px', fontSize: 12, fontWeight: 600 }}>
+                        {c.status?.toUpperCase()}
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, fontSize: 13 }}>
+                      <div><div style={{ color: '#9ca3af', fontSize: 11, marginBottom: 3 }}>FREELANCER</div><div style={{ fontWeight: 600 }}>{c.freelancer?.name || '—'}</div><div style={{ color: '#6b7280', fontSize: 12 }}>{c.freelancer?.email}</div></div>
+                      <div><div style={{ color: '#9ca3af', fontSize: 11, marginBottom: 3 }}>AGREED AMOUNT</div><div style={{ fontWeight: 700, color: '#E85D24', fontSize: 16 }}>${c.agreedAmount}</div></div>
+                      <div><div style={{ color: '#9ca3af', fontSize: 11, marginBottom: 3 }}>STARTED</div><div style={{ fontWeight: 600 }}>{c.startDate ? new Date(c.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</div></div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : null}
+
+          {activeTab === 'projects' && (
+        <>{/* Stats cards */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Jobs Posted', value: projects.length, icon: <ProjectOutlined />, color: '#E85D24' },

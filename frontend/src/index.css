@@ -1,130 +1,191 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
-  --primary: #f05a28; /* The vibrant orange */
+  --primary: #f05a28;
   --primary-hover: #d94e20;
+  --sb-orange: #E85D24;
+  --sb-orange-hover: #c94d1a;
   --bg-light: #e5e5e5;
   --card-bg: #e1dcd6;
+  --sb-border: #e0e0e0;
   --text-dark: #1a1a1a;
   --text-muted: #666;
   --error: #ff4d4d;
+  --font-main: 'Inter', system-ui, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-main);
   color: var(--text-dark);
   background-color: var(--bg-light);
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Global Utility Classes ─────────────────────────────────────────────── */
-
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
 .btn-primary {
   background-color: var(--primary);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
+  color: white; border: none;
+  padding: 10px 20px; border-radius: 8px;
+  font-weight: 500; cursor: pointer;
   transition: background-color 0.2s ease;
 }
-
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-}
+.btn-primary:hover { background-color: var(--primary-hover); }
 
 .btn-outline {
-  background-color: transparent;
-  color: var(--primary);
+  background-color: transparent; color: var(--primary);
   border: 1px solid var(--primary);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
+  padding: 10px 20px; border-radius: 8px;
+  font-weight: 500; cursor: pointer;
   transition: all 0.2s ease;
 }
-
-.btn-outline:hover {
-  background-color: rgba(240, 90, 40, 0.1);
-}
+.btn-outline:hover { background-color: rgba(240, 90, 40, 0.1); }
 
 .btn-dark {
-  background-color: #1a1a1a;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
+  background-color: #1a1a1a; color: white; border: none;
+  padding: 12px 20px; border-radius: 8px;
+  font-weight: 500; cursor: pointer;
   transition: background-color 0.2s ease;
-}
-
-.btn-dark:hover {
-  background-color: #000;
-}
-
-.input-field {
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background-color: white;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s ease;
 }
+.btn-dark:hover { background-color: #000; }
 
-.input-field:focus {
-  border-color: var(--primary);
+/* ─── Forms ──────────────────────────────────────────────────────────────── */
+.input-field {
+  width: 100%; padding: 12px 16px;
+  border-radius: 8px; border: 1px solid #ccc;
+  background-color: white; font-size: 14px;
+  outline: none; transition: border-color 0.2s ease;
 }
+.input-field:focus { border-color: var(--primary); }
+.form-group { margin-bottom: 20px; }
+.form-label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
-
-/* ─── Auth Gradients ─────────────────────────────────────────────────────── */
-
-/* Simulating the grainy gradient from the Figma */
+/* ─── Auth Gradient ──────────────────────────────────────────────────────── */
 .auth-gradient-bg {
   background: radial-gradient(circle at 70% 50%, #f05a28 0%, #a33814 40%, #1a1a1a 80%);
-  position: relative;
-  overflow: hidden;
+  position: relative; overflow: hidden;
 }
-
-/* Adding a noise overlay using a pseudo-element and an inline SVG SVG noise is an easy way to get that grainy look without images */
 .auth-gradient-bg::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  opacity: 0.15;
-  pointer-events: none;
+  content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0.15; pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
-
-/* For the glowing white spot in the dark gradient */
 .auth-gradient-bg::after {
-  content: "";
-  position: absolute;
-  top: 30%; left: 20%;
+  content: ""; position: absolute; top: 30%; left: 20%;
   width: 40vw; height: 40vw;
   background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
-  mix-blend-mode: overlay;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(40px);
+  mix-blend-mode: overlay; pointer-events: none; border-radius: 50%; filter: blur(40px);
 }
+
+/* ─── Auth Layout ────────────────────────────────────────────────────────── */
+.auth-container-center {
+  min-height: 100vh; display: flex;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.login-modal {
+  background-color: #d8d8d8; padding: 40px; border-radius: 24px;
+  width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 10;
+}
+.auth-logo { font-size: 32px; font-weight: 700; color: var(--text-dark); text-align: center; margin-bottom: 24px; }
+.auth-error {
+  background-color: rgba(255,77,77,0.1); color: var(--error);
+  padding: 10px; border-radius: 8px; margin-bottom: 20px;
+  text-align: center; font-size: 14px;
+}
+.login-actions { display: flex; gap: 16px; margin-top: 30px; }
+.login-actions button { flex: 1; }
+
+/* ─── Split Screen (Register) ────────────────────────────────────────────── */
+.split-screen-container { display: flex; min-height: 100vh; }
+.split-left { flex: 1; }
+.split-right {
+  flex: 1; background-color: #e5e5e5;
+  display: flex; align-items: center; justify-content: center; padding: 40px;
+  overflow-y: auto;
+}
+.register-content { width: 100%; max-width: 480px; }
+.register-header { margin-bottom: 32px; }
+.register-header .auth-logo { text-align: left; margin-bottom: 5px; }
+.auth-tagline { color: #666; font-size: 14px; }
+.register-title { font-size: 24px; font-weight: 600; margin-bottom: 24px; }
+.password-hint { display: block; margin-top: 6px; font-size: 12px; color: #888; }
+.w-100 { width: 100%; }
+.login-link-container { margin-top: 20px; text-align: center; font-size: 14px; }
+.text-primary { color: var(--primary); }
+.cursor-pointer { cursor: pointer; }
+.cursor-pointer:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .split-screen-container { flex-direction: column; }
+  .split-left { display: none; }
+}
+
+/* ─── SkillBridge Dashboard (sb-* classes) ───────────────────────────────── */
+.sb-page { min-height: 100vh; background: #fafafa; }
+.sb-container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+.sb-card {
+  background: #fff; border: 1px solid var(--sb-border);
+  border-radius: 12px; padding: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: box-shadow 0.2s;
+}
+.sb-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+.sb-btn-primary {
+  background: var(--sb-orange); color: #fff; border: none;
+  border-radius: 6px; padding: 8px 18px;
+  font-size: 0.875rem; font-weight: 600; cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.sb-btn-primary:hover { background: var(--sb-orange-hover); transform: translateY(-1px); }
+
+.sb-badge-open {
+  background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;
+  border-radius: 999px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600;
+}
+.sb-badge-inprogress {
+  background: #fff7ed; color: var(--sb-orange); border: 1px solid #fed7aa;
+  border-radius: 999px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600;
+}
+.sb-badge-closed {
+  background: #f9fafb; color: #6b7280; border: 1px solid #d1d5db;
+  border-radius: 999px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600;
+}
+
+/* Ant Design overrides */
+.ant-btn-primary { background-color: var(--sb-orange) !important; border-color: var(--sb-orange) !important; }
+.ant-btn-primary:hover { background-color: var(--sb-orange-hover) !important; border-color: var(--sb-orange-hover) !important; }
+.ant-table-thead > tr > th {
+  background: #f9fafb !important; color: #374151 !important;
+  font-weight: 600 !important; font-size: 0.8rem !important;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.ant-tag { border-radius: 6px !important; font-weight: 500 !important; }
+
+/* Tailwind-like helpers used by dashboard pages */
+.py-8  { padding-top: 2rem; padding-bottom: 2rem; }
+.mb-6  { margin-bottom: 1.5rem; }
+.mb-8  { margin-bottom: 2rem; }
+.mb-4  { margin-bottom: 1rem; }
+.mb-2  { margin-bottom: 0.5rem; }
+.mt-2  { margin-top: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
+.gap-3 { gap: 0.75rem; }
+.flex  { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+.grid { display: grid; }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.col-span-1 { grid-column: span 1; }
+.col-span-3 { grid-column: span 3; }
+.max-w-3xl { max-width: 48rem; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.w-full { width: 100%; }
+.overflow-hidden { overflow: hidden; }

@@ -5,11 +5,13 @@ import { AuthContext } from '../context/AuthContext';
 import '../pages/Profile.css';
 
 const Navbar = () => {
-  const { user, logout } = useContext(AuthContext);
+  const auth = useContext(AuthContext);
+  const user = auth?.user;
+  const logout = auth?.logout;
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    if (logout) logout();
     navigate('/login');
   };
 
@@ -17,7 +19,8 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="nav-left">
         <h2 className="nav-logo">
-          <span style={{ color: 'var(--primary)' }}>S</span>kill<span style={{ color: 'var(--primary)' }}>B</span>ridge
+          <span style={{ color: 'var(--primary)' }}>S</span>kill
+          <span style={{ color: 'var(--primary)' }}>B</span>ridge
         </h2>
         <ul className="nav-links">
           <li>Find work <ChevronDown size={16} /></li>
@@ -26,13 +29,12 @@ const Navbar = () => {
           <li>Messages</li>
         </ul>
       </div>
-      
+
       <div className="nav-right">
         <HelpCircle className="nav-icon" />
         <Bell className="nav-icon" />
-        
-        <div className="user-menu" onClick={handleLogout} title="Click to logout for now">
-          {/* Avatar placeholder */}
+
+        <div className="user-menu" onClick={handleLogout} title="Click to logout">
           <div className="avatar-small">
             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
           </div>
