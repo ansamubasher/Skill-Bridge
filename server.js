@@ -21,8 +21,8 @@ mongoose.connect('mongodb+srv://ansamubasher_db_user:test123@cluster0.o5xuys6.mo
   .then(() => {
     console.log('MongoDB connected, state:', mongoose.connection.readyState);
 
-    // ✅ Register ALL routes AFTER DB is ready
-    app.use('/auth', authRoutes);
+    // // ✅ Register ALL routes AFTER DB is ready
+    // app.use('/auth', authRoutes);
     // //app.use('/profile', profileRoutes);
     // //app.use('/freelancer', freelancerRoutes);
     app.use ('/client', clientRoutes);
@@ -44,3 +44,8 @@ mongoose.connect('mongodb+srv://ansamubasher_db_user:test123@cluster0.o5xuys6.mo
 mongoose.connection.on('error', (err) => {
   console.log('Mongoose error:', err.message);
 });
+
+
+
+
+
