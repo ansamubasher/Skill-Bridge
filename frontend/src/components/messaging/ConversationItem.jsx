@@ -1,9 +1,9 @@
 import React from 'react';
 
 const ConversationItem = ({ conversation, isSelected, onClick, currentUser }) => {
-  const otherUser = conversation.participants.find(p => p._id !== currentUser._id);
+  const otherUser = conversation.participants?.find(p => p._id !== currentUser?._id);
   
-  if (!otherUser) return null;
+  if (!otherUser || !currentUser) return null;
 
   const formatTime = (dateString) => {
     if (!dateString) return '';
@@ -40,9 +40,14 @@ const ConversationItem = ({ conversation, isSelected, onClick, currentUser }) =>
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <p className="text-[12px] text-text-muted truncate pr-2">
+          <p className="text-[12px] text-text-muted truncate pr-2 flex-1">
             {conversation.lastMessage || "Started a project"}
           </p>
+          {conversation.project && (
+            <span className="text-[9px] px-1.5 py-0.5 bg-sb-orange/10 text-sb-orange rounded-full border border-sb-orange/20 font-medium truncate max-w-[60px]">
+              {conversation.project.title}
+            </span>
+          )}
         </div>
       </div>
     </div>

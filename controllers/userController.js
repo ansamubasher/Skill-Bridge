@@ -148,9 +148,45 @@ const updatePassword = async (req, res) => {
   }
 };
 
+// Search users (e.g. for messaging)
+const searchUsers = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(200).json({ success: true, users: [] });
+    }
+
+    const users = await User.find({
+      $and: [
+        { _id: { $ne: req.user.id } },
+        {
+          $or: [
+            { name: { $regex: query, $options: "i" } },
+            { email: { $regex: query, $options: "i" } },
+          ],
+        },
+      ],
+    })
+      .select("name email role")
+      .limit(10);
+
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to search users",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   getUserById,
   updateUserInfo,
   updatePassword,
+  searchUsers,
 };

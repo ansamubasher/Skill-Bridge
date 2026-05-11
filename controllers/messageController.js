@@ -6,7 +6,7 @@ const sendMessage = async (req, res) => {
   try {
     // Always take sender from req.user._id (populated by auth middleware)
     const sender = req.user._id; 
-    const { receiver, content } = req.body;
+    const { receiver, content, projectId } = req.body;
 
     if (!receiver || !content) {
       return res.status(400).json({ success: false, error: "Receiver and content are required" });
@@ -25,12 +25,14 @@ const sendMessage = async (req, res) => {
     if (conversation) {
       conversation.lastMessage = content;
       conversation.lastMessageTime = new Date();
+      if (projectId && !conversation.project) conversation.project = projectId;
       await conversation.save();
     } else {
       conversation = await Conversation.create({
         participants: [sender, receiver],
         lastMessage: content,
         lastMessageTime: new Date(),
+        project: projectId,
       });
     }
 
@@ -76,6 +78,7 @@ const getUserConversations = async (req, res) => {
       participants: userId,
     })
       .populate("participants", "name email")
+      .populate("project", "title")
       .sort({ lastMessageTime: -1 });
 
     return res.status(200).json({

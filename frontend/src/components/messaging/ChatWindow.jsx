@@ -12,6 +12,7 @@ const ChatWindow = ({
   sendError, 
   currentUser 
 }) => {
+  console.log('ChatWindow selectedUser:', selectedUser);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -85,7 +86,7 @@ const ChatWindow = ({
                 <MessageBubble 
                   key={idx} 
                   msg={msg} 
-                  isMe={msg.sender === currentUser._id} 
+                  isMe={msg.sender === currentUser?._id} 
                 />
               ))
             )}

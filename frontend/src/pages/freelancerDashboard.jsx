@@ -315,8 +315,31 @@ export default function FreelancerDashboard({ onSelectProject }) {
                       {c.status?.toUpperCase() || 'ACTIVE'}
                     </span>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#f97316' }}>
-                    💰 ${c.agreedAmount}
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#f97316', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>💰 ${c.agreedAmount}</span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button 
+                        onClick={() => navigate('/deliver-work', { state: { contract: c } })}
+                        style={{ background: '#f97316', color: '#fff', border: 'none', borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}
+                      >
+                        📦 Deliver
+                      </button>
+                      <button 
+                        onClick={() => navigate('/messages', { 
+                          state: { 
+                            targetUser: {
+                              _id: c.client?._id,
+                              name: c.client?.name,
+                              email: c.client?.email,
+                              projectId: c.project?._id
+                            } 
+                          } 
+                        })}
+                        style={{ background: '#fff', border: '1px solid #f97316', color: '#f97316', borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer', fontWeight: 600 }}
+                      >
+                        Message Client
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))

@@ -1,7 +1,8 @@
 const Project  = require('../models/Project');
 const Bid      = require('../models/Bid');
-const Contract = require('../models/Contract');
+const Contract     = require('../models/Contract');
 const Conversation = require('../models/Conversation');
+const Delivery     = require('../models/Delivery');
 
 // ── Create project (client) ───────────────────────────────────────────────────
 const createProject = async (req, res) => {
@@ -264,6 +265,48 @@ const getMyContracts = async (req, res) => {
   }
 };
 
+// ── Submit work delivery (freelancer) ──────────────────────────────────────
+const submitDelivery = async (req, res) => {
+  try {
+    const { projectId, message, files } = req.body;
+    const freelancerId = req.user.id || req.user._id;
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+    // Check if project status is 'in_progress'
+    if (project.status !== 'in_progress') {
+      return res.status(400).json({ success: false, message: 'Project is not in progress' });
+    }
+
+    const delivery = new Delivery({
+      project: projectId,
+      freelancer: freelancerId,
+      message,
+      files
+    });
+
+    await delivery.save();
+    res.status(201).json({ success: true, message: 'Work submitted successfully', delivery });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to submit work', error: error.message });
+  }
+};
+
+// ── Get project deliveries (client/freelancer) ──────────────────────────────
+const getProjectDeliveries = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const deliveries = await Delivery.find({ project: projectId })
+      .populate('freelancer', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, deliveries });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch deliveries', error: error.message });
+  }
+};
+
 module.exports = {
   createProject,
   getAllProjects,
@@ -276,4 +319,7 @@ module.exports = {
   placeBid,
   acceptProjectBid,
   getMyContracts,
+  submitDelivery,
+  getProjectDeliveries
 };
+

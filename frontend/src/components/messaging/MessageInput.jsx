@@ -15,7 +15,7 @@ const MessageInput = ({ onSendMessage, selectedUser, sendError }) => {
   return (
     <div className="p-4 border-t border-gray-200/50 bg-white/60 backdrop-blur-md flex flex-col">
       {sendError && <p className="text-xs text-red-500 mb-2 px-2 animate-pulse">{sendError}</p>}
-      <form onSubmit={handleSubmit} className="flex gap-3 items-end">
+      <div className="flex gap-3 items-end">
         <button 
           type="button"
           className="text-gray-400 hover:text-text-dark transition-colors duration-200 p-2 shrink-0 mb-1"
@@ -37,13 +37,13 @@ const MessageInput = ({ onSendMessage, selectedUser, sendError }) => {
           rows={1}
         />
         <button 
-          type="submit"
+          onClick={handleSubmit}
           disabled={!newMessage.trim()}
           className="bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full w-12 h-12 shrink-0 flex items-center justify-center transition-colors duration-200 shadow-sm mb-0.5"
         >
           <Send size={20} className="ml-1" />
         </button>
-      </form>
+      </div>
     </div>
   );
 };

@@ -16,6 +16,7 @@ import MessagesPage from './pages/shared/MessagesPage';
 import PaymentDashboard from './pages/PaymentDashboard';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import DeliverWork from './pages/DeliverWork';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = React.useContext(AuthContext);
@@ -64,6 +65,7 @@ const App = () => {
               <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
               <Route path="/messages" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
               <Route path="/manage-finances" element={<PrivateRoute><PaymentDashboard /></PrivateRoute>} />
+              <Route path="/deliver-work" element={<PrivateRoute><DeliverWork /></PrivateRoute>} />
 
               {/* Root: smart redirect based on auth state */}
               <Route path="/" element={<RootRedirect />} />

@@ -7,16 +7,20 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [token, setToken] = useState(localStorage.getItem('sb_token'));
+
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('sb_token');
-      if (token) {
+      const storedToken = localStorage.getItem('sb_token');
+      if (storedToken) {
         try {
           const res = await api.get('/users/profile');
           setUser(res.data.user);
+          setToken(storedToken);
         } catch (error) {
           console.error("Token invalid or expired", error);
           localStorage.removeItem('sb_token');
+          setToken(null);
         }
       }
       setLoading(false);
@@ -24,18 +28,20 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = (userData, token) => {
-    localStorage.setItem('sb_token', token);
+  const login = (userData, newToken) => {
+    localStorage.setItem('sb_token', newToken);
     setUser(userData);
+    setToken(newToken);
   };
 
   const logout = () => {
     localStorage.removeItem('sb_token');
     setUser(null);
+    setToken(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, token, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

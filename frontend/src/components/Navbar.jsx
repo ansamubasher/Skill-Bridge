@@ -17,12 +17,15 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const isClient = Array.isArray(user?.role)
+    ? user.role.includes('client')
+    : user?.role === 'client';
+
   const navLinks = [
-    { name: 'Find work', path: '/dashboard', hasChevron: true },
-    { name: 'Deliver work', path: '/freelancer-dashboard', hasChevron: true },
+    ...(!isClient ? [{ name: 'Find work',     path: '/freelancer-dashboard', hasChevron: true }] : []),
+    ...(!isClient ? [{ name: 'Deliver work',   path: '/deliver-work',         hasChevron: false }] : []),
     { name: 'Manage Finances', path: '/manage-finances', hasChevron: true },
-    { name: 'Messages', path: '/messages', hasChevron: false },
-    { name: 'Profile', path: '/profile', hasChevron: false },
+    { name: 'Profile',         path: '/profile',         hasChevron: false },
   ];
 
   return (
@@ -52,16 +55,18 @@ const Navbar = () => {
 
         <div className="flex items-center gap-5">
           <div className="hidden sm:flex items-center gap-5">
-            <HelpCircle className="text-gray-600 dark:text-gray-400 cursor-pointer hover:text-primary transition-colors" size={22} />
+            {!isClient && <HelpCircle className="text-gray-600 dark:text-gray-400 cursor-pointer hover:text-primary transition-colors" size={22} />}
             <Bell className="text-gray-600 dark:text-gray-400 cursor-pointer hover:text-primary transition-colors" size={22} />
           </div>
 
-          <div className="flex items-center gap-2 cursor-pointer" onClick={handleLogout}>
-            <div className="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-sm">
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          {!isClient && (
+            <div className="flex items-center gap-2 cursor-pointer" onClick={handleLogout}>
+              <div className="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-sm">
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <ChevronDown size={16} className="text-gray-500 hidden sm:block" />
             </div>
-            <ChevronDown size={16} className="text-gray-500 hidden sm:block" />
-          </div>
+          )}
 
           {/* Mobile Menu Button */}
           <button 
@@ -92,7 +97,7 @@ const Navbar = () => {
               </li>
             ))}
             <li className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800 flex gap-6">
-               <HelpCircle className="text-gray-500" />
+               {!isClient && <HelpCircle className="text-gray-500" />}
                <Bell className="text-gray-500" />
             </li>
           </ul>

@@ -5,6 +5,7 @@ const {
   getUserById,
   updateUserInfo,
   updatePassword,
+  searchUsers,
 } = require("../controllers/userController");
 
 const { authenticateToken } = require("../middlewares/authMiddleware");
@@ -13,6 +14,7 @@ const router = express.Router();
 
 // Protected routes (require authentication)
 router.get("/profile", authenticateToken, getProfile);
+router.get("/search", authenticateToken, searchUsers);
 router.put("/info", authenticateToken, updateUserInfo);
 router.put("/password", authenticateToken, updatePassword);
 

@@ -12,12 +12,19 @@ const {
   placeBid,
   acceptProjectBid,
   getMyContracts,
+  submitDelivery,
+  getProjectDeliveries,
 } = require('../controllers/projectController');
 
 const router = express.Router();
 
+// ── Deliveries ──────────────────────────────────────────────────────────────
+router.post('/deliver', authenticateToken, submitDelivery);          // POST /projects/deliver
+router.get('/:projectId/deliveries', authenticateToken, getProjectDeliveries); // GET /projects/:projectId/deliveries
+
 // ── Contract ──────────────────────────────────────────────────────────────────
 router.get('/contracts/mine', authenticateToken, getMyContracts);   // GET /projects/contracts/mine
+
 
 // ── Freelancer browse ─────────────────────────────────────────────────────────
 router.get('/', authenticateToken, getAllProjects);                  // GET /projects

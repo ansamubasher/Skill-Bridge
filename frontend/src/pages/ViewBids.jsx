@@ -200,39 +200,57 @@ const ViewBids = () => {
                         )}
                       </Space>
 
-                      {/* Accept button */}
-                      {isPending && !alreadyHasWinner && (
-                        <Popconfirm
-                          title="Accept this bid?"
-                          description={
-                            <span>
-                              This will hire <strong>{bid.freelancer?.name || 'this freelancer'}</strong> for <strong>${bid.bidAmount}</strong>.
-                              All other bids will be declined.
-                            </span>
-                          }
-                          onConfirm={() => acceptBid(bid._id)}
-                          okText="Yes, Accept"
-                          cancelText="Cancel"
-                          okButtonProps={{ style: { background: '#E85D24', borderColor: '#E85D24' } }}
-                        >
+                        <Space>
                           <Button
-                            type="primary"
-                            icon={<CheckOutlined />}
-                            loading={acceptingBid === bid._id}
-                            style={{ background: '#E85D24', borderColor: '#E85D24', borderRadius: 8, fontWeight: 700 }}
+                            icon={<MailOutlined />}
+                            onClick={() => navigate('/messages', { 
+                              state: { 
+                                targetUser: {
+                                  _id: bid.freelancer?._id,
+                                  name: bid.freelancer?.name,
+                                  email: bid.freelancer?.email,
+                                  projectId: projectId
+                                } 
+                              } 
+                            })}
+                            style={{ borderRadius: 8 }}
                           >
-                            Accept Bid
+                            Message
                           </Button>
-                        </Popconfirm>
-                      )}
-                      {isPending && alreadyHasWinner && (
-                        <Button disabled size="small" style={{ borderRadius: 8 }}>Bid already accepted</Button>
-                      )}
-                      {isAccepted && (
-                        <Button icon={<CheckCircleOutlined />} style={{ borderRadius: 8, color: '#16a34a', borderColor: '#16a34a', fontWeight: 700 }} disabled>
-                          Hired!
-                        </Button>
-                      )}
+
+                          {isPending && !alreadyHasWinner && (
+                            <Popconfirm
+                              title="Accept this bid?"
+                              description={
+                                <span>
+                                  This will hire <strong>{bid.freelancer?.name || 'this freelancer'}</strong> for <strong>${bid.bidAmount}</strong>.
+                                  All other bids will be declined.
+                                </span>
+                              }
+                              onConfirm={() => acceptBid(bid._id)}
+                              okText="Yes, Accept"
+                              cancelText="Cancel"
+                              okButtonProps={{ style: { background: '#E85D24', borderColor: '#E85D24' } }}
+                            >
+                              <Button
+                                type="primary"
+                                icon={<CheckOutlined />}
+                                loading={acceptingBid === bid._id}
+                                style={{ background: '#E85D24', borderColor: '#E85D24', borderRadius: 8, fontWeight: 700 }}
+                              >
+                                Accept Bid
+                              </Button>
+                            </Popconfirm>
+                          )}
+                          {isPending && alreadyHasWinner && (
+                            <Button disabled size="small" style={{ borderRadius: 8 }}>Bid already accepted</Button>
+                          )}
+                          {isAccepted && (
+                            <Button icon={<CheckCircleOutlined />} style={{ borderRadius: 8, color: '#16a34a', borderColor: '#16a34a', fontWeight: 700 }} disabled>
+                              Hired!
+                            </Button>
+                          )}
+                        </Space>
                     </div>
                   </Card>
                 );
