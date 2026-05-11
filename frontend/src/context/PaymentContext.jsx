@@ -15,15 +15,22 @@ export const PaymentProvider = ({ children }) => {
   const [actionLoading, setActionLoading] = useState(new Set()); // Track IDs being processed
 
   const fetchPayments = useCallback(async () => {
-    if (!user?.role) return;
+    const userRole = Array.isArray(user?.role) ? user.role[0] : user?.role;
+    if (!userRole) {
+      console.warn('PaymentContext: No user role found, skipping fetch');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     try {
-      const data = await (user.role === 'client' 
+      console.log(`PaymentContext: Fetching payments for role: ${userRole}`);
+      const data = await (userRole === 'client' 
         ? paymentService.getClientPayments() 
         : paymentService.getFreelancerPayments());
       setPayments(data || []);
     } catch (err) {
+      console.error('PaymentContext: Fetch error:', err);
       setError(err.message || 'Failed to fetch payments');
     } finally {
       setLoading(false);

@@ -6,16 +6,14 @@ const getMyProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Find user's profile
-    const user = await User.findById(userId);
-    if (!user ) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found",
-      });
+    // Find profile where user field matches userId
+    const profile = await Profile.findOne({ user: userId }).populate("completedProjects");
+    
+    if (!profile) {
+      // If no profile exists yet, create one for this user
+      const newProfile = await Profile.create({ user: userId });
+      return res.status(200).json({ success: true, profile: newProfile });
     }
-
-    const profile = await Profile.findById(user).populate("completedProjects");
 
     res.status(200).json({
       success: true,
@@ -82,23 +80,18 @@ const getProfileById = async (req, res) => {
 
 // Update user profile
 const updateProfile = async (req, res) => {
+  console.log('HIT updateProfile:', req.user.id, req.body);
   try {
     const { bio, portfolio, availability, coverImage } = req.body;
     const userId = req.user.id;
 
-    const user = await User.findById(userId);
-    if (!user || !user.profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found",
-      });
-    }
-
     const updateData = {};
     if (bio !== undefined) updateData.bio = bio;
     if (portfolio !== undefined) updateData.portfolio = portfolio;
+
     if (availability) updateData.availability = availability;
     if (coverImage !== undefined) updateData.coverImage = coverImage;
+    if (req.body.skills !== undefined) updateData.skills = req.body.skills;
 
     if (availability && !["available", "busy", "offline"].includes(availability)) {
       return res.status(400).json({
@@ -107,11 +100,22 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    const updatedProfile = await Profile.findByIdAndUpdate(
-      user.profile,
+    // Find and update profile where user field matches userId
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: userId },
       updateData,
       { new: true, runValidators: true }
     );
+
+    if (!updatedProfile) {
+      // Create if it doesn't exist
+      const newProfile = await Profile.create({ ...updateData, user: userId });
+      return res.status(200).json({
+        success: true,
+        message: "Profile created and updated",
+        profile: newProfile,
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -140,19 +144,15 @@ const addSkill = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
-    if (!user || !user.profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found",
-      });
-    }
-
-    const updatedProfile = await Profile.findByIdAndUpdate(
-      user.profile,
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: userId },
       { $addToSet: { skills: skill.trim() } },
       { new: true }
     );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ success: false, message: "Profile not found" });
+    }
 
     res.status(200).json({
       success: true,
@@ -181,19 +181,15 @@ const removeSkill = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
-    if (!user || !user.profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found",
-      });
-    }
-
-    const updatedProfile = await Profile.findByIdAndUpdate(
-      user.profile,
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: userId },
       { $pull: { skills: skill } },
       { new: true }
     );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ success: false, message: "Profile not found" });
+    }
 
     res.status(200).json({
       success: true,
@@ -222,19 +218,15 @@ const addPortfolioItem = async (req, res) => {
       });
     }
 
-    const user = await User.findById(userId);
-    if (!user || !user.profile) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found",
-      });
-    }
-
-    const updatedProfile = await Profile.findByIdAndUpdate(
-      user.profile,
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: userId },
       { $addToSet: { portfolio: url } },
       { new: true }
     );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ success: false, message: "Profile not found" });
+    }
 
     res.status(200).json({
       success: true,

@@ -85,13 +85,27 @@ exports.executePayout = async (req, res) => {
  */
 exports.getClientPayments = async (req, res) => {
   try {
-    const clientId = req.user?.id;
-    if (!clientId) return res.status(401).json({ error: 'Unauthorized' });
+    const clientId = req.user?.id || req.user?._id || req.user?.userId;
+    console.log(`[getClientPayments] Auth Check: clientId=${clientId}, userObject=${JSON.stringify(req.user)}`);
+    
+    if (!clientId) return res.status(401).json({ error: 'Unauthorized: No User ID found in token' });
 
-    const payments = await Payment.find({ clientId }).sort({ createdAt: -1 });
-    res.json(payments);
+    const payments = await Payment.find({ clientId })
+      .populate('projectId', 'title')
+      .populate('freelancerId', 'name email')
+      .populate('clientId', 'name email')
+      .sort({ createdAt: -1 });
+
+    const formattedPayments = payments.map(p => ({
+      ...p._doc,
+      projectTitle: p.projectId?.title || 'Untitled Project',
+      freelancerName: p.freelancerId?.name || 'Unknown Freelancer',
+      clientName: p.clientId?.name || 'Unknown Client'
+    }));
+
+    res.json(formattedPayments);
   } catch (err) {
-    console.error(err);
+    console.error('[getClientPayments] FATAL ERROR:', err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -101,13 +115,27 @@ exports.getClientPayments = async (req, res) => {
  */
 exports.getFreelancerPayments = async (req, res) => {
   try {
-    const freelancerId = req.user?.id;
-    if (!freelancerId) return res.status(401).json({ error: 'Unauthorized' });
+    const freelancerId = req.user?.id || req.user?._id || req.user?.userId;
+    console.log(`[getFreelancerPayments] Auth Check: freelancerId=${freelancerId}`);
+    
+    if (!freelancerId) return res.status(401).json({ error: 'Unauthorized: No User ID found in token' });
 
-    const payments = await Payment.find({ freelancerId }).sort({ createdAt: -1 });
-    res.json(payments);
+    const payments = await Payment.find({ freelancerId })
+      .populate('projectId', 'title')
+      .populate('freelancerId', 'name email')
+      .populate('clientId', 'name email')
+      .sort({ createdAt: -1 });
+
+    const formattedPayments = payments.map(p => ({
+      ...p._doc,
+      projectTitle: p.projectId?.title || 'Untitled Project',
+      freelancerName: p.freelancerId?.name || 'Unknown Freelancer',
+      clientName: p.clientId?.name || 'Unknown Client'
+    }));
+
+    res.json(formattedPayments);
   } catch (err) {
-    console.error(err);
+    console.error('[getFreelancerPayments] FATAL ERROR:', err);
     res.status(500).json({ error: err.message });
   }
 };

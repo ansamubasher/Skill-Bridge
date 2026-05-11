@@ -22,6 +22,7 @@ const Navbar = () => {
     { name: 'Deliver work', path: '/freelancer-dashboard', hasChevron: true },
     { name: 'Manage Finances', path: '/manage-finances', hasChevron: true },
     { name: 'Messages', path: '/messages', hasChevron: false },
+    { name: 'Profile', path: '/profile', hasChevron: false },
   ];
 
   return (

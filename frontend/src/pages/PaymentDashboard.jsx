@@ -35,25 +35,32 @@ const PaymentDashboard = () => {
   const role = user?.role;
 
   useEffect(() => {
+    console.log('PaymentDashboard: fetching payments for role:', role);
     fetchPayments();
-  }, [fetchPayments]);
+  }, [fetchPayments, role]);
 
   const handleReview = async (paymentId) => {
     try {
       await reviewPayment(paymentId);
     } catch (err) {
-      alert(err.message);
+      console.error('Review error:', err);
+      // notification handled by context
     }
   };
 
   const handleRelease = async (paymentId) => {
-    await releasePayment(paymentId);
+    try {
+      await releasePayment(paymentId);
+    } catch (err) {
+      console.error('Release error:', err);
+    }
   };
 
-  // Summary stats calculations
-  const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-  const paidAmount = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + (p.amount || 0), 0);
-  const pendingAmount = totalAmount - paidAmount;
+  // Summary stats calculations with defensive checks
+  const safePayments = Array.isArray(payments) ? payments : [];
+  const totalAmount = safePayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const paidAmount = safePayments.filter(p => p.status === 'paid').reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const pendingAmount = Math.max(0, totalAmount - paidAmount);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] dark:bg-gray-950 transition-colors duration-300">

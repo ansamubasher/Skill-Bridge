@@ -7,7 +7,7 @@ const {
   updatePassword,
 } = require("../controllers/userController");
 
-const { authenticateToken } = require("../midllewares/authMiddleware");
+const { authenticateToken } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 

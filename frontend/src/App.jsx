@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import ClientDashboard from './pages/ClientDashboard';
+import ViewBids from './pages/ViewBids';
 import PostProject from './pages/PostProject';
 import FreelancerDashboard from './pages/freelancerDashboard';
 import ProjectDetail from './pages/projectDetails';
@@ -29,6 +30,15 @@ const FreelancerPage = () => {
   return <FreelancerDashboard onSelectProject={setSelectedId} />;
 };
 
+// Smart root redirect: logged-in → dashboard, guest → login
+const RootRedirect = () => {
+  const { user, loading } = React.useContext(AuthContext);
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f05a28', fontWeight: 600 }}>Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  const isClient = Array.isArray(user?.role) ? user.role.includes('client') : user?.role === 'client';
+  return <Navigate to={isClient ? '/dashboard' : '/freelancer-dashboard'} replace />;
+};
+
 const App = () => {
   return (
     <AuthProvider>
@@ -45,6 +55,7 @@ const App = () => {
               {/* Client routes */}
               <Route path="/dashboard"    element={<PrivateRoute><ClientDashboard /></PrivateRoute>} />
               <Route path="/post-project" element={<PrivateRoute><PostProject /></PrivateRoute>} />
+              <Route path="/view-bids"    element={<PrivateRoute><ViewBids /></PrivateRoute>} />
 
               {/* Freelancer routes */}
               <Route path="/freelancer-dashboard" element={<PrivateRoute><FreelancerPage /></PrivateRoute>} />
@@ -54,8 +65,9 @@ const App = () => {
               <Route path="/messages" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
               <Route path="/manage-finances" element={<PrivateRoute><PaymentDashboard /></PrivateRoute>} />
 
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
+              {/* Root: smart redirect based on auth state */}
+              <Route path="/" element={<RootRedirect />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Router>
         </PaymentProvider>

@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken } = require('../midllewares/authMiddleware.js');
+const { authenticateToken } = require('../middlewares/authMiddleware.js');
 const {
   createProject,
   getAllProjects,
