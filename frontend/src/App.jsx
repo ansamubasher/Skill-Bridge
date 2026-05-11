@@ -9,6 +9,7 @@ import ClientDashboard from './pages/ClientDashboard';
 import PostProject from './pages/PostProject';
 import FreelancerDashboard from './pages/freelancerDashboard';
 import ProjectDetail from './pages/projectDetails';
+import MessagesPage from './pages/shared/MessagesPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = React.useContext(AuthContext);
@@ -41,6 +42,7 @@ const App = () => {
 
           {/* Shared */}
           <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+          <Route path="/messages" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
 
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />

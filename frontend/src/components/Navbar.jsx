@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { HelpCircle, Bell, ChevronDown } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import '../pages/Profile.css';
@@ -9,6 +9,7 @@ const Navbar = () => {
   const user = auth?.user;
   const logout = auth?.logout;
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     if (logout) logout();
@@ -26,7 +27,12 @@ const Navbar = () => {
           <li>Find work <ChevronDown size={16} /></li>
           <li>Deliver work <ChevronDown size={16} /></li>
           <li>Manage Finances <ChevronDown size={16} /></li>
-          <li>Messages</li>
+          <li 
+            className={`cursor-pointer transition-colors duration-200 ${location.pathname === '/messages' ? 'text-primary font-bold' : 'hover:text-primary'}`}
+            onClick={() => navigate('/messages')}
+          >
+            Messages
+          </li>
         </ul>
       </div>
 

@@ -1,6 +1,7 @@
 const Project  = require('../models/Project');
 const Bid      = require('../models/Bid');
 const Contract = require('../models/Contract');
+const Conversation = require('../models/Conversation');
 
 // ── Create project (client) ───────────────────────────────────────────────────
 const createProject = async (req, res) => {
@@ -207,6 +208,19 @@ const acceptProjectBid = async (req, res) => {
     // Mark bids
     await Bid.findByIdAndUpdate(bidId, { status: 'accepted' });
     await Bid.updateMany({ project: project._id, _id: { $ne: bidId } }, { status: 'rejected' });
+
+    // Create conversation if it doesn't exist
+    let conversation = await Conversation.findOne({
+      participants: { $all: [project.client, bid.freelancer] },
+    });
+    
+    if (!conversation) {
+      await Conversation.create({
+        participants: [project.client, bid.freelancer],
+        lastMessage: "Project started! You can now communicate here.",
+        lastMessageTime: new Date(),
+      });
+    }
 
     res.status(200).json({ success: true, message: 'Bid accepted — contract created', contract, project });
   } catch (error) {
