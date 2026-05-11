@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { PaymentProvider } from './context/PaymentContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -10,6 +12,7 @@ import PostProject from './pages/PostProject';
 import FreelancerDashboard from './pages/freelancerDashboard';
 import ProjectDetail from './pages/projectDetails';
 import MessagesPage from './pages/shared/MessagesPage';
+import PaymentDashboard from './pages/PaymentDashboard';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = React.useContext(AuthContext);
@@ -27,27 +30,32 @@ const FreelancerPage = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public */}
-          <Route path="/login"    element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+      <NotificationProvider>
+        <PaymentProvider>
+          <Router>
+            <Routes>
+              {/* Public */}
+              <Route path="/login"    element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-          {/* Client routes */}
-          <Route path="/dashboard"    element={<PrivateRoute><ClientDashboard /></PrivateRoute>} />
-          <Route path="/post-project" element={<PrivateRoute><PostProject /></PrivateRoute>} />
+              {/* Client routes */}
+              <Route path="/dashboard"    element={<PrivateRoute><ClientDashboard /></PrivateRoute>} />
+              <Route path="/post-project" element={<PrivateRoute><PostProject /></PrivateRoute>} />
 
-          {/* Freelancer routes */}
-          <Route path="/freelancer-dashboard" element={<PrivateRoute><FreelancerPage /></PrivateRoute>} />
+              {/* Freelancer routes */}
+              <Route path="/freelancer-dashboard" element={<PrivateRoute><FreelancerPage /></PrivateRoute>} />
 
-          {/* Shared */}
-          <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-          <Route path="/messages" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
+              {/* Shared */}
+              <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+              <Route path="/messages" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
+              <Route path="/manage-finances" element={<PrivateRoute><PaymentDashboard /></PrivateRoute>} />
 
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </Router>
+        </PaymentProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 };
