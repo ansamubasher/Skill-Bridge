@@ -1,25 +1,9 @@
 import { useState, useEffect } from 'react';
+import Navbar from '../components/Navbar';
 
 const getToken = () => localStorage.getItem('sb_token');
 
-function Navbar({ onBack }) {
-  return (
-    <nav style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-        <span style={{ fontSize: 22, fontWeight: 700, cursor: 'pointer' }} onClick={onBack}>
-          <span style={{ color: '#f97316' }}>Skill</span><span style={{ color: '#1f2937' }}>Bridge</span>
-        </span>
-        {['Find work ▾', 'Deliver work ▾', 'Manage Finances ▾', 'Messages'].map(item => (
-          <button key={item} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: item.startsWith('Find') ? '#f97316' : '#374151' }}>{item}</button>
-        ))}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ fontSize: 18, cursor: 'pointer' }}>?</span>
-        <span style={{ fontSize: 18, cursor: 'pointer' }}>🔔</span>
-      </div>
-    </nav>
-  );
-}
+
 
 function SkillTag({ label, mandatory }) {
   return (
@@ -81,7 +65,7 @@ export default function ProjectDetail({ projectId, onBack }) {
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb', fontFamily: "'Inter', sans-serif" }}>
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
-      <Navbar onBack={onBack} />
+      <Navbar />
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '28px 20px', display: 'grid', gridTemplateColumns: '1fr 260px', gap: 24, alignItems: 'start' }}>
 

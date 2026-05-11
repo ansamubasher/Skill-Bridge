@@ -2,39 +2,12 @@ import { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BidModal from '../components/BidModal';
 import { AuthContext } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
 
 const CATEGORIES = ['All', 'Graphic Design', 'Web Design', 'Development', 'Canva', 'Marketing', 'Writing'];
 const TABS = ['Best Matches', 'Most Recent', 'Saved Jobs'];
 
-// ── Navbar ───────────────────────────────────────────────────────────────────
-function Navbar({ user, onLogout }) {
-  return (
-    <nav style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-        <span style={{ fontSize: 22, fontWeight: 700 }}>
-          <span style={{ color: '#f97316' }}>Skill</span>
-          <span style={{ color: '#1f2937' }}>Bridge</span>
-        </span>
-        {['Find work ▾', 'Deliver work ▾', 'Manage Finances ▾', 'Messages'].map(item => (
-          <button key={item} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: item.startsWith('Find') ? '#f97316' : '#374151', fontWeight: item.startsWith('Find') ? 600 : 400 }}>
-            {item}
-          </button>
-        ))}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ fontSize: 18, cursor: 'pointer' }}>?</span>
-        <span style={{ fontSize: 18, cursor: 'pointer' }}>🔔</span>
-        <div
-          onClick={onLogout}
-          title="Click to logout"
-          style={{ width: 32, height: 32, borderRadius: '50%', background: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-        >
-          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-        </div>
-      </div>
-    </nav>
-  );
-}
+
 
 // ── Profile Card ─────────────────────────────────────────────────────────────
 function ProfileCard({ user }) {
@@ -243,7 +216,7 @@ export default function FreelancerDashboard({ onSelectProject }) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb', fontFamily: "'Inter', sans-serif" }}>
-      <Navbar user={auth?.user} onLogout={handleLogout} />
+      <Navbar />
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 20px', display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24 }}>
 
