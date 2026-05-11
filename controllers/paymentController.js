@@ -80,6 +80,38 @@ exports.executePayout = async (req, res) => {
   }
 };
 
+/**
+ * 4️⃣ Fetch all payments for the authenticated client.
+ */
+exports.getClientPayments = async (req, res) => {
+  try {
+    const clientId = req.user?.id;
+    if (!clientId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const payments = await Payment.find({ clientId }).sort({ createdAt: -1 });
+    res.json(payments);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * 5️⃣ Fetch all payments for the authenticated freelancer.
+ */
+exports.getFreelancerPayments = async (req, res) => {
+  try {
+    const freelancerId = req.user?.id;
+    if (!freelancerId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const payments = await Payment.find({ freelancerId }).sort({ createdAt: -1 });
+    res.json(payments);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 /* Backward‑compatible alias – some old code may still call createPayment */
 exports.createPayment = async (req, res) => {
   return exports.createPaymentRequest(req, res);

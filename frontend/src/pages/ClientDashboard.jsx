@@ -16,8 +16,7 @@ const { Title, Text } = Typography;
 
 /** Status badge colours matching Figma palette */
 const STATUS_COLOR = {
-  open: 'green',
-  'in-progress': 'orange',
+  'in_progress': 'orange',
   completed: 'blue',
   cancelled: 'red',
 };
@@ -174,7 +173,7 @@ const ClientDashboard = () => {
 
   // ── Summary stats ──────────────────────────────────────────────────────────
   const openCount = projects.filter((p) => p.status === 'open' || !p.status).length;
-  const activeCount = projects.filter((p) => p.status === 'in-progress').length;
+  const activeCount = projects.filter((p) => p.status === 'in_progress').length;
   const completedCount = projects.filter((p) => p.status === 'completed').length;
   const totalBids = projects.reduce((acc, p) => acc + (Array.isArray(p.bids) ? p.bids.length : 0), 0);
 

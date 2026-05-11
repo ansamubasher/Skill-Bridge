@@ -13,6 +13,8 @@ import FreelancerDashboard from './pages/freelancerDashboard';
 import ProjectDetail from './pages/projectDetails';
 import MessagesPage from './pages/shared/MessagesPage';
 import PaymentDashboard from './pages/PaymentDashboard';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = React.useContext(AuthContext);
@@ -37,6 +39,8 @@ const App = () => {
               {/* Public */}
               <Route path="/login"    element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
               {/* Client routes */}
               <Route path="/dashboard"    element={<PrivateRoute><ClientDashboard /></PrivateRoute>} />

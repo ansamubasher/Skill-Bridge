@@ -182,13 +182,22 @@ const acceptProjectBid = async (req, res) => {
   try {
     const { bidId } = req.body;
     const userId    = req.user.id || req.user._id;
-    const project   = await Project.findById(req.params.id);
+    const projectId = req.params.id;
 
-    if (!project)                                         return res.status(404).json({ success: false, message: 'Project not found' });
-    if (project.client.toString() !== userId.toString()) return res.status(403).json({ success: false, message: 'Not authorized' });
+    console.log(`[AcceptBid] Project: ${projectId}, Bid: ${bidId}, User: ${userId}`);
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+    console.log(`[AcceptBid] Project Owner: ${project.client}`);
+    if (project.client.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized to accept bids for this project' });
+    }
 
     const bid = await Bid.findById(bidId);
     if (!bid) return res.status(404).json({ success: false, message: 'Bid not found' });
+
+    console.log(`[AcceptBid] Bid Freelancer: ${bid.freelancer}, Amount: ${bid.bidAmount}`);
 
     // Create contract
     const contract = new Contract({
@@ -197,11 +206,13 @@ const acceptProjectBid = async (req, res) => {
       freelancer:   bid.freelancer,
       bid:          bid._id,
       agreedAmount: bid.bidAmount,
+      status:       'active'
     });
     await contract.save();
+    console.log(`[AcceptBid] Contract created: ${contract._id}`);
 
     // Update project
-    project.acceptedBid = bidId;
+    project.acceptedBid = bid._id;
     project.status      = 'in_progress';
     await project.save();
 
@@ -210,20 +221,26 @@ const acceptProjectBid = async (req, res) => {
     await Bid.updateMany({ project: project._id, _id: { $ne: bidId } }, { status: 'rejected' });
 
     // Create conversation if it doesn't exist
-    let conversation = await Conversation.findOne({
-      participants: { $all: [project.client, bid.freelancer] },
-    });
-    
-    if (!conversation) {
-      await Conversation.create({
-        participants: [project.client, bid.freelancer],
-        lastMessage: "Project started! You can now communicate here.",
-        lastMessageTime: new Date(),
+    try {
+      let conversation = await Conversation.findOne({
+        participants: { $all: [project.client, bid.freelancer] },
       });
+      
+      if (!conversation) {
+        await Conversation.create({
+          participants: [project.client, bid.freelancer],
+          lastMessage: "Project started! You can now communicate here.",
+          lastMessageTime: new Date(),
+        });
+        console.log(`[AcceptBid] Conversation created`);
+      }
+    } catch (convErr) {
+      console.error(`[AcceptBid] Conversation error (non-fatal):`, convErr.message);
     }
 
     res.status(200).json({ success: true, message: 'Bid accepted — contract created', contract, project });
   } catch (error) {
+    console.error(`[AcceptBid] FATAL ERROR:`, error);
     res.status(500).json({ success: false, message: 'Failed to accept bid', error: error.message });
   }
 };

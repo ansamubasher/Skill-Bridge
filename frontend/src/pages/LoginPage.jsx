@@ -63,6 +63,15 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <div style={{ textAlign: 'right', marginTop: '4px' }}>
+              <span 
+                className="forgot-password-link" 
+                onClick={() => navigate('/forgot-password')}
+                style={{ fontSize: '12px', color: 'var(--primary)', cursor: 'pointer', fontWeight: '500' }}
+              >
+                Forgot Password?
+              </span>
+            </div>
           </div>
           
           <div className="login-actions">
