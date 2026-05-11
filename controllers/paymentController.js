@@ -80,6 +80,66 @@ exports.executePayout = async (req, res) => {
   }
 };
 
+/**
+ * 4️⃣ Fetch all payments for the authenticated client.
+ */
+exports.getClientPayments = async (req, res) => {
+  try {
+    const clientId = req.user?.id || req.user?._id || req.user?.userId;
+    console.log(`[getClientPayments] Auth Check: clientId=${clientId}, userObject=${JSON.stringify(req.user)}`);
+    
+    if (!clientId) return res.status(401).json({ error: 'Unauthorized: No User ID found in token' });
+
+    const payments = await Payment.find({ clientId })
+      .populate('projectId', 'title')
+      .populate('freelancerId', 'name email')
+      .populate('clientId', 'name email')
+      .sort({ createdAt: -1 });
+
+    const formattedPayments = payments.map(p => ({
+      ...p._doc,
+      projectTitle: p.projectId?.title || 'Untitled Project',
+      freelancerName: p.freelancerId?.name || 'Unknown Freelancer',
+      clientName: p.clientId?.name || 'Unknown Client'
+    }));
+
+    res.json(formattedPayments);
+  } catch (err) {
+    console.error('[getClientPayments] FATAL ERROR:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * 5️⃣ Fetch all payments for the authenticated freelancer.
+ */
+exports.getFreelancerPayments = async (req, res) => {
+  try {
+    const freelancerId = req.user?.id || req.user?._id || req.user?.userId;
+    console.log(`[getFreelancerPayments] Auth Check: freelancerId=${freelancerId}`);
+    
+    if (!freelancerId) return res.status(401).json({ error: 'Unauthorized: No User ID found in token' });
+
+    const payments = await Payment.find({ freelancerId })
+      .populate('projectId', 'title')
+      .populate('freelancerId', 'name email')
+      .populate('clientId', 'name email')
+      .sort({ createdAt: -1 });
+
+    const formattedPayments = payments.map(p => ({
+      ...p._doc,
+      projectTitle: p.projectId?.title || 'Untitled Project',
+      freelancerName: p.freelancerId?.name || 'Unknown Freelancer',
+      clientName: p.clientId?.name || 'Unknown Client'
+    }));
+
+    res.json(formattedPayments);
+  } catch (err) {
+    console.error('[getFreelancerPayments] FATAL ERROR:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 /* Backward‑compatible alias – some old code may still call createPayment */
 exports.createPayment = async (req, res) => {
   return exports.createPaymentRequest(req, res);

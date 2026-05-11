@@ -1,30 +1,21 @@
 import axios from 'axios';
 
-/**
- * Axios instance pre-configured with:
- *  - Base URL pointing at the Express backend
- *  - Authorization header injected from localStorage on every request
- */
 const axiosInstance = axios.create({
   baseURL: '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor — attach Bearer token for authenticateToken middleware
+// Attach sb_token to every request
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('sb_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — surface clean error messages
+// Surface clean error messages
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {

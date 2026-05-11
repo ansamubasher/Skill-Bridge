@@ -29,6 +29,18 @@ const profileSchema = new mongoose.Schema(
       },
     ],
 
+    workHistory: [
+      {
+        type: String,
+      },
+    ],
+
+    testimonials: [
+      {
+        type: String,
+      },
+    ],
+
     completedProjects: [
       {
         type: mongoose.Schema.Types.ObjectId,

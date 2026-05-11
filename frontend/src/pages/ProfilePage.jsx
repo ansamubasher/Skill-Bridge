@@ -1,72 +1,50 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { getMyProfile, getMyUser, updateUserInfo, updateProfile } from '../services/api';
+import { getMyProfile, getMyUser } from '../services/api';
 import Navbar from '../components/Navbar';
-import { MapPin, Upload, Pencil, Star, ArrowLeft } from 'lucide-react';
+import { MapPin, Upload, Pencil, Star, Save, X } from 'lucide-react';
+import { updateProfile, updateUserInfo } from '../services/api';
+import { notification, Spin, Input, Button as AntButton, message } from 'antd';
 import './Profile.css';
 
+const { TextArea } = Input;
+
 const ProfilePage = () => {
-  const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const { user, setUser } = useContext(AuthContext);
+  const [notifApi, contextHolder] = notification.useNotification();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   
-  const [editSection, setEditSection] = useState(null);
-  const [formData, setFormData] = useState({});
-  
+  // Form state
+  const [formData, setFormData] = useState({
+    bio: '',
+    department: '',
+    academicYear: '',
+    skills: ''
+  });
+
   // Is this user a client or freelancer?
-  // Defaulting to freelancer if role array includes it, otherwise client.
   const isFreelancer = user?.role?.includes('freelancer');
-
-  const handleEditClick = (section, initialData) => {
-    setEditSection(section);
-    setFormData(initialData || {});
-  };
-
-  const handleCancel = () => {
-    setEditSection(null);
-    setFormData({});
-  };
-
-  const handleSave = async (section) => {
-    try {
-      if (section === 'education') {
-        await updateUserInfo({ department: formData.department, academicYear: formData.academicYear });
-      } else if (section === 'about') {
-        await updateProfile({ bio: formData.bio });
-      } else if (section === 'portfolio') {
-        const urlArray = (formData.portfolio || '').split(',').map(s => s.trim()).filter(Boolean);
-        await updateProfile({ portfolio: urlArray });
-        formData.portfolio = urlArray; // keep local state consistent
-      } else if (section === 'skills') {
-        const skillArray = (formData.skills || '').split(',').map(s => s.trim()).filter(Boolean);
-        await updateProfile({ skills: skillArray });
-        formData.skills = skillArray; // keep local state consistent
-      }
-
-      setProfile((prev) => ({ ...prev, ...formData }));
-      setEditSection(null);
-    } catch (error) {
-      console.error("Failed to save", error);
-      const errorMsg = error.response?.data?.message || error.message || "Unknown error";
-      alert(`Failed to save changes: ${errorMsg}`);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const res = await getMyProfile();
-        setProfile(res.data.profile);
+        const p = res.data.profile || res.data;
+        setProfile(p);
+        setFormData({
+          bio: p?.bio || '',
+          department: user?.department || '',
+          academicYear: user?.academicYear || '',
+          skills: p?.skills?.join(', ') || '',
+          portfolio: p?.portfolio?.join('\n') || '',
+          workHistory: p?.workHistory?.join('\n') || '',
+          testimonials: p?.testimonials?.join('\n') || ''
+        });
       } catch (error) {
         console.error("Failed to fetch profile", error);
-        // If profile fetch fails (e.g. backend routes commented out), we just use user context
       } finally {
         setLoading(false);
       }
@@ -77,20 +55,64 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  if (loading) return <div>Loading profile...</div>;
+  const handleSave = async () => {
+    setSaving(true);
+    console.log('[Profile] Saving changes...', formData);
+    
+    try {
+      // Execute both updates in parallel
+      const [userRes, profileRes] = await Promise.all([
+        updateUserInfo({
+          department: formData.department || '',
+          academicYear: formData.academicYear || ''
+        }),
+        updateProfile({
+          bio: formData.bio || '',
+          skills: (formData.skills || '').split(',').map(s => s.trim()).filter(s => s),
+          portfolio: (formData.portfolio || '').split('\n').map(s => s.trim()).filter(s => s),
+          workHistory: (formData.workHistory || '').split('\n').map(s => s.trim()).filter(s => s),
+          testimonials: (formData.testimonials || '').split('\n').map(s => s.trim()).filter(s => s)
+        })
+      ]);
+
+      console.log('[Profile] Update success:', { user: userRes.data, profile: profileRes.data });
+
+      notifApi.success({ 
+        message: 'Profile Updated', 
+        description: 'Your changes have been saved successfully.' 
+      });
+      
+      // Update local state with fresh data from server
+      if (userRes.data?.user) setUser(userRes.data.user);
+      if (profileRes.data?.profile) setProfile(profileRes.data.profile);
+      
+      setIsEditing(false);
+    } catch (err) {
+      console.error('[Profile] Save failed:', err);
+      notifApi.error({ 
+        message: 'Update Failed', 
+        description: err.response?.data?.message || err.message 
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Spin size="large" />
+    </div>
+  );
 
   return (
     <div className="profile-container">
-      <Navbar hideLinks={true} />
-      
-      <div style={{ padding: '20px 40px 0' }}>
-        <button 
-          onClick={() => navigate(isFreelancer ? '/freelancer-dashboard' : '/dashboard')} 
-          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: '600' }}
-        >
-          <ArrowLeft size={20} /> Back to Dashboard
-        </button>
-      </div>
+      {contextHolder}
+      <Navbar />
       
       <div className="profile-header-section">
         <div className="profile-header-content">
@@ -112,7 +134,36 @@ const ProfilePage = () => {
             </div>
           </div>
           
-
+          <div className="profile-actions">
+            {isEditing ? (
+              <>
+                <AntButton 
+                  icon={<Save size={16} />} 
+                  type="primary" 
+                  loading={saving}
+                  onClick={handleSave}
+                  style={{ background: '#E85D24', borderColor: '#E85D24' }}
+                >
+                  Save Changes
+                </AntButton>
+                <AntButton 
+                  icon={<X size={16} />} 
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel
+                </AntButton>
+              </>
+            ) : (
+              <AntButton 
+                type="primary" 
+                icon={<Pencil size={16} />}
+                onClick={() => setIsEditing(true)}
+                style={{ background: '#E85D24', borderColor: '#E85D24' }}
+              >
+                Edit Profile
+              </AntButton>
+            )}
+          </div>
         </div>
       </div>
       
@@ -122,103 +173,147 @@ const ProfilePage = () => {
           <div className="profile-card">
             <div className="card-header">
               <h3>Education</h3>
-              {editSection !== 'education' && <Pencil size={16} className="edit-icon" onClick={() => handleEditClick('education', { department: profile?.department || user?.department, academicYear: profile?.academicYear || user?.academicYear })} />}
+              {!isEditing && <Pencil size={16} className="edit-icon" onClick={() => setIsEditing(true)} />}
             </div>
-            {editSection === 'education' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <input name="department" placeholder="Department" value={formData.department || ''} onChange={handleChange} className="input-field" />
-                <input name="academicYear" placeholder="Academic Year" value={formData.academicYear || ''} onChange={handleChange} className="input-field" />
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button className="btn-primary" onClick={() => handleSave('education')} style={{ padding: '6px 12px' }}>Save</button>
-                  <button className="btn-outline" onClick={handleCancel} style={{ padding: '6px 12px' }}>Cancel</button>
-                </div>
+            {isEditing ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Input 
+                  name="department" 
+                  placeholder="Department (e.g. Computer Science)" 
+                  value={formData.department} 
+                  onChange={handleInputChange} 
+                />
+                <Input 
+                  name="academicYear" 
+                  placeholder="Academic Year (e.g. 2024)" 
+                  value={formData.academicYear} 
+                  onChange={handleInputChange} 
+                />
               </div>
             ) : (
               <>
-                <p className="card-text">{profile?.department || user?.department || 'No department info'}</p>
-                <p className="card-text">{profile?.academicYear || user?.academicYear || 'No academic year'}</p>
+                <p className="card-text">{user?.department || 'No department info'}</p>
+                <p className="card-text">{user?.academicYear || 'No academic year'}</p>
               </>
             )}
           </div>
           
-          {isFreelancer && (
-            <div className="profile-card">
-              <div className="card-header">
-                <h3>Bids</h3>
-              </div>
-              <p className="card-text">How many bids you got left</p>
+          <div className="profile-card">
+            <div className="card-header">
+              <h3>Testimonials</h3>
+              {!isEditing && <Pencil size={16} className="edit-icon" onClick={() => setIsEditing(true)} />}
             </div>
-          )}
-
-
+            {isEditing ? (
+              <TextArea 
+                name="testimonials" 
+                rows={4} 
+                value={formData.testimonials} 
+                onChange={handleInputChange} 
+                placeholder="Client review URLs or quotes (one per line)..."
+              />
+            ) : (
+              <div className="card-text">
+                {profile?.testimonials && profile.testimonials.length > 0 ? (
+                  profile.testimonials.map((t, i) => <p key={i}>{t}</p>)
+                ) : (
+                  <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No testimonials yet</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column */}
         <div className="profile-col-right">
           <div className="profile-card main-card">
             <div className="card-header">
-              <h3>{profile?.bio ? 'About' : 'Your Intro'}</h3>
-              {editSection !== 'about' && <Pencil size={16} className="edit-icon" onClick={() => handleEditClick('about', { bio: profile?.bio })} />}
+              <h3>{profile?.bio ? 'About' : 'About Me'}</h3>
+              {!isEditing && <Pencil size={16} className="edit-icon" onClick={() => setIsEditing(true)} />}
             </div>
-            {editSection === 'about' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <textarea name="bio" placeholder="Who you are, what you did..." value={formData.bio || ''} onChange={handleChange} className="input-field" style={{ minHeight: '80px', fontFamily: 'inherit' }} />
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button className="btn-primary" onClick={() => handleSave('about')} style={{ padding: '6px 12px' }}>Save</button>
-                  <button className="btn-outline" onClick={handleCancel} style={{ padding: '6px 12px' }}>Cancel</button>
-                </div>
-              </div>
+            {isEditing ? (
+              <TextArea 
+                name="bio" 
+                rows={4} 
+                value={formData.bio} 
+                onChange={handleInputChange} 
+                placeholder="Write a short bio about yourself..."
+              />
             ) : (
-              <>
-                <p className="card-text">
-                  {profile?.bio || 'Who you are, what you did basic intro type text'}
-                </p>
-              </>
+              <p className="card-text">
+                {profile?.bio || 'Introduce yourself to the community...'}
+              </p>
             )}
             
             <hr className="divider" />
             
             <div className="card-header">
               <h3>Portfolio</h3>
-              {editSection !== 'portfolio' && <Pencil size={16} className="edit-icon" onClick={() => handleEditClick('portfolio', { portfolio: profile?.portfolio?.join(', ') || '' })} />}
+              {!isEditing && <Pencil size={16} className="edit-icon" onClick={() => setIsEditing(true)} />}
             </div>
-            {editSection === 'portfolio' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <textarea name="portfolio" placeholder="Comma separated URLs" value={formData.portfolio || ''} onChange={(e) => setFormData({ portfolio: e.target.value })} className="input-field" style={{ minHeight: '60px' }} />
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button className="btn-primary" onClick={() => handleSave('portfolio')} style={{ padding: '6px 12px' }}>Save</button>
-                  <button className="btn-outline" onClick={handleCancel} style={{ padding: '6px 12px' }}>Cancel</button>
-                </div>
-              </div>
+            {isEditing ? (
+              <TextArea 
+                name="portfolio" 
+                rows={4} 
+                value={formData.portfolio} 
+                onChange={handleInputChange} 
+                placeholder="Portfolio links (one per line)..."
+              />
             ) : (
-              <>
+              <div>
                 {profile?.portfolio && profile.portfolio.length > 0 ? (
                   profile.portfolio.map((url, i) => (
-                    <p key={i} className="text-primary">{url}</p>
+                    <p key={i} className="text-primary" style={{ marginBottom: 4 }}>
+                      <a href={url.startsWith('http') ? url : `https://${url}`} target="_blank" rel="noreferrer" style={{ color: '#f05a28' }}>{url}</a>
+                    </p>
                   ))
                 ) : (
-                  <p className="text-primary">url</p>
+                  <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No portfolio added</p>
                 )}
-              </>
+              </div>
             )}
 
-
+            <hr className="divider" />
+            
+            <div className="card-header">
+              <h3>Work History</h3>
+              {!isEditing && <Pencil size={16} className="edit-icon" onClick={() => setIsEditing(true)} />}
+            </div>
+            {isEditing ? (
+              <TextArea 
+                name="workHistory" 
+                rows={4} 
+                value={formData.workHistory} 
+                onChange={handleInputChange} 
+                placeholder="Work history entries (one per line)..."
+              />
+            ) : (
+              <div className="work-history-boxes">
+                {profile?.workHistory && profile.workHistory.length > 0 ? (
+                  profile.workHistory.map((work, i) => (
+                    <div key={i} className="work-box" style={{ background: '#f9fafb', padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', marginBottom: 8, width: '100%' }}>
+                      <p>{work}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>No work history available</p>
+                )}
+              </div>
+            )}
 
             {isFreelancer && (
               <>
                 <hr className="divider" />
                 <div className="card-header">
                   <h3>Skills</h3>
-                  {editSection !== 'skills' && <Pencil size={16} className="edit-icon" onClick={() => handleEditClick('skills', { skills: profile?.skills?.join(', ') || '' })} />}
+                  {!isEditing && <Pencil size={16} className="edit-icon" onClick={() => setIsEditing(true)} />}
                 </div>
-                {editSection === 'skills' ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <input name="skills" placeholder="Comma separated skills (e.g. React, Node)" value={formData.skills || ''} onChange={(e) => setFormData({ skills: e.target.value })} className="input-field" />
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => handleSave('skills')} style={{ padding: '6px 12px' }}>Save</button>
-                      <button className="btn-outline" onClick={handleCancel} style={{ padding: '6px 12px' }}>Cancel</button>
-                    </div>
-                  </div>
+                {isEditing ? (
+                  <Input 
+                    name="skills" 
+                    placeholder="Skills (comma separated: React, Node, UI/UX)" 
+                    value={formData.skills} 
+                    onChange={handleInputChange} 
+                  />
                 ) : (
                   <div className="skills-container">
                     {profile?.skills && profile.skills.length > 0 ? (
@@ -228,11 +323,7 @@ const ProfilePage = () => {
                         </span>
                       ))
                     ) : (
-                      <>
-                        <span className="skill-pill"><Star size={12} fill="white" /> Skill 1</span>
-                        <span className="skill-pill"><Star size={12} fill="white" /> Skill 2</span>
-                        <span className="skill-pill"><Star size={12} fill="white" /> Skill 3</span>
-                      </>
+                      <p className="card-text" style={{ color: '#9ca3af', fontStyle: 'italic' }}>No skills added yet</p>
                     )}
                   </div>
                 )}

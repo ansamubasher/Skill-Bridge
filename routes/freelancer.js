@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const freelancerController = require('../controllers/freelancerController');
-const { authenticateToken } = require("../midllewares/authMiddleware.js");
+const { authenticateToken } = require("../middlewares/authMiddleware.js");
 // routers to be used
 console.log("about to run route dashboard");
  

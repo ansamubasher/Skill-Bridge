@@ -1,7 +1,7 @@
 
 const express = require("express");
 const { getMyProfile, getProfileById, updateProfile, addSkill,removeSkill,addPortfolioItem, removePortfolioItem } = require("../controllers/profileController.js");
-const { authenticateToken } = require("../midllewares/authMiddleware.js");
+const { authenticateToken } = require("../middlewares/authMiddleware.js");
 
 const router = express.Router();
 

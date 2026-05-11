@@ -6,6 +6,8 @@ const {
   createPaymentRequest,
   confirmProjectReview,
   executePayout,
+  getClientPayments,
+  getFreelancerPayments,
 } = require('../controllers/paymentController');
 
 // Simple auth middleware – you can replace with real auth later
@@ -19,5 +21,9 @@ router.post('/:paymentId/review', auth, confirmProjectReview);
 
 // 3️⃣ Trigger payout to freelancer (mock service)
 router.post('/:paymentId/payout', auth, executePayout);
+
+// 4️⃣ Fetch payments by role
+router.get('/client', auth, getClientPayments);
+router.get('/freelancer', auth, getFreelancerPayments);
 
 module.exports = router;

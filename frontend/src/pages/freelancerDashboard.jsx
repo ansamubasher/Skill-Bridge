@@ -3,20 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { getMyProfile } from "../services/api";
 import BidModal from "../components/BidModal";
-// bidModal = { projectId, projectTitle }
-const API_BASE = "http://localhost:5000/api/freelancer";
+import axiosInstance from "../api/axiosInstance";
 
-const getToken = () => localStorage.getItem("sb_token");
 
-const authFetch = (url, options = {}) =>
-  fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-      ...(options.headers || {}),
-    },
-  });
 
 const CATEGORIES = ["All", "Graphic Design", "Web Design", "Development", "Canva", "Marketing", "Writing"];
 const TABS = ["Best Matches", "Most Recent", "Saved Jobs"];
@@ -26,11 +15,38 @@ const TABS = ["Best Matches", "Most Recent", "Saved Jobs"];
 function Navbar({ activeNav, setActiveNav }) {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      axiosInstance.get('/notifications')
+        .then(res => {
+          if (res.data?.success) setNotifications(res.data.notifications);
+        })
+        .catch(() => {});
+    }
+  }, [user]);
+
+  const handleNotificationClick = async (notif) => {
+    try {
+      if (!notif.isRead) {
+        await axiosInstance.patch(`/notifications/${notif._id}/read`);
+        setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, isRead: true } : n));
+      }
+      setShowNotifications(false);
+      if (notif.link) navigate(notif.link);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleLogout = () => {
     logout();
     navigate("/");
   };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <nav style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 24px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
@@ -39,21 +55,69 @@ function Navbar({ activeNav, setActiveNav }) {
           <span style={{ color: "#f97316" }}>Skill</span>
           <span style={{ color: "#1f2937" }}>Bridge</span>
         </span>
-        {["Find work", "Deliver work", "Messages"].map((item) => (
+        {["Find work", "Deliver work"].map((item) => (
           <button 
             key={item} 
             onClick={() => setActiveNav && setActiveNav(item)}
             style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: activeNav === item ? "#f97316" : "#374151", fontWeight: activeNav === item ? 600 : 400 }}>
-            {item} {item !== "Messages" && "▾"}
+            {item} ▾
           </button>
         ))}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <span style={{ fontSize: 18, cursor: "pointer" }}>?</span>
-        <span style={{ fontSize: 18, cursor: "pointer" }}>🔔</span>
-        {/* We keep the dynamic avatar, effectively removing the hardcoded LL */}
-        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f97316", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 13, fontWeight: 700 }}>
-          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+        <div style={{ position: 'relative' }}>
+          <span 
+            style={{ fontSize: 18, cursor: "pointer" }}
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
+            🔔
+          </span>
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute', top: -4, right: -4,
+              background: '#ef4444', color: '#fff', fontSize: 10,
+              fontWeight: 700, padding: '2px 6px', borderRadius: 10
+            }}>
+              {unreadCount}
+            </span>
+          )}
+
+          {showNotifications && (
+            <div style={{
+              position: 'absolute', top: 40, right: 0, width: 320,
+              background: '#fff', border: '1px solid #e5e7eb',
+              borderRadius: 12, boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              maxHeight: 400, overflowY: 'auto', zIndex: 100
+            }}>
+              <div style={{ padding: 12, borderBottom: '1px solid #f3f4f6', fontWeight: 700, color: '#1f2937' }}>
+                Notifications
+              </div>
+              {notifications.length === 0 ? (
+                <div style={{ padding: 16, textAlign: 'center', color: '#6b7280', fontSize: 14 }}>
+                  No notifications yet
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {notifications.map(n => (
+                    <div
+                      key={n._id}
+                      onClick={() => handleNotificationClick(n)}
+                      style={{
+                        padding: 12, cursor: 'pointer', borderBottom: '1px solid #f9fafb',
+                        background: !n.isRead ? '#fff7ed' : 'transparent',
+                        transition: 'background 0.2s'
+                      }}
+                    >
+                      <p style={{ fontSize: 14, color: '#1f2937', margin: 0 }}>{n.message}</p>
+                      <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0 0' }}>
+                        {new Date(n.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <button 
           onClick={handleLogout}
@@ -130,14 +194,7 @@ function ProfileCard({ profile }) {
   );
 }
 
-function BidsCard({ bids }) {
-  return (
-    <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: 16, marginBottom: 16 }}>
-      <span style={{ fontSize: 14, color: "#374151" }}>Bids Available: </span>
-      <span style={{ color: "#f97316", fontWeight: 700 }}>{bids ?? "1 billion"}</span>
-    </div>
-  );
-}
+// Removed BidsCard
 
 
 
@@ -213,7 +270,7 @@ const [bidModal, setBidModal] = useState(null);
             </p>
           )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-            {(project.tags || []).map((tag) => (
+            {(project.tags || project.requiredSkills || []).map((tag) => (
               <TagBadge key={tag} tag={tag} />
             ))}
           </div>
@@ -223,9 +280,9 @@ const [bidModal, setBidModal] = useState(null);
                 ✅ Payment Verified
               </span>
             )}
-            <span>Proposals: {project.proposals || "10 to 15"}</span>
-            {project.deadline && <span>Deadline: {project.deadline}</span>}
-            {project.clientName && <span>Client: <strong>{project.clientName}</strong></span>}
+            <span>Proposals: {project.bids?.length || "0"}</span>
+            {project.deadline && <span>Deadline: {new Date(project.deadline).toLocaleDateString()}</span>}
+            {(project.clientName || project.client?.name) && <span>Client: <strong>{project.clientName || project.client?.name}</strong></span>}
           </div>
         </div>
         <div style={{ display: "flex", gap: 10, marginLeft: 16, flexShrink: 0 }}>
@@ -306,18 +363,16 @@ export default function SkillBridgeDashboard({ onSelectProject }) {
   const [activeTab, setActiveTab] = useState("Best Matches");
   const [activeCategory, setActiveCategory] = useState("All");
   const [savedJobs, setSavedJobs] = useState(new Set());
-  const [profile] = useState({ name: "Ling Long", title: "Graphic Design", initials: "LL", completion: 70 });
-  // After your other useState declarations, add:
-const [bidModal, setBidModal] = useState(null);
+  const [bidModal, setBidModal] = useState(null);
+  const [activeContracts, setActiveContracts] = useState([]);
+  const navigate = useNavigate();
 
   const fetchProjects = useCallback(async () => {
     try {
-      const res = await authFetch(`${API_BASE}/dashboard`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setProjects(data.projects || data || []);
+      const res = await axiosInstance.get(`/projects`);
+      setProjects(res.data.projects || res.data || []);
     } catch {
-      setProjects([]); // Ensure dummy projects are removed
+      setProjects([]);
     } finally {
       setLoading(false);
     }
@@ -325,13 +380,23 @@ const [bidModal, setBidModal] = useState(null);
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
+  useEffect(() => {
+    if (activeNav === "Deliver work") {
+      axiosInstance.get('/projects/contracts/mine')
+        .then(res => {
+          if (res.data?.success) {
+            setActiveContracts(res.data.contracts);
+          }
+        })
+        .catch(err => console.error("Failed to fetch contracts", err));
+    }
+  }, [activeNav]);
+
   const handleSearch = useCallback(async (q) => {
     if (!q.trim()) return fetchProjects();
     try {
-      const res = await authFetch(`${API_BASE}/searched?q=${encodeURIComponent(q)}`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setProjects(data.projects || data || []);
+      const res = await axiosInstance.get(`/projects?search=${encodeURIComponent(q)}`);
+      setProjects(res.data.projects || res.data || []);
     } catch {
       setProjects([]);
     }
@@ -344,10 +409,7 @@ const [bidModal, setBidModal] = useState(null);
 
   const handleBid = async (projectId, amount) => {
     try {
-      await authFetch(`${API_BASE}/bid`, {
-        method: "POST",
-        body: JSON.stringify({ projectId, amount }),
-      });
+      await axiosInstance.post(`/projects/${projectId}/bids`, { bidAmount: amount });
     } catch {}
   };
 
@@ -434,49 +496,52 @@ const [bidModal, setBidModal] = useState(null);
             ))
           )}
         </div>
-<BidModal
-  open={!!bidModal}
-  project={bidModal}
-  onClose={() => setBidModal(null)}
-  onSubmit={handleBid}
-/>
+
         {/* Right Sidebar */}
         <div>
-          <ProfileCard profile={profile} />
-          <BidsCard />
+          <ProfileCard profile={null} />
         </div>
       </div>
       )}
 
+      <BidModal
+        open={!!bidModal}
+        project={bidModal}
+        onClose={() => setBidModal(null)}
+        onSubmit={handleBid}
+      />
+
       {activeNav === "Deliver work" && (
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px" }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, color: "#111827", marginBottom: 20 }}>Your Active Contracts</h2>
-          <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: 40, textAlign: "center", color: "#6b7280" }}>
-            <p style={{ fontSize: 16 }}>No active contracts found.</p>
-            <p style={{ fontSize: 14, marginTop: 8 }}>When you win a bid and the client hires you, the contract will appear here.</p>
-          </div>
+          {activeContracts.length === 0 ? (
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: 40, textAlign: "center", color: "#6b7280" }}>
+              <p style={{ fontSize: 16 }}>No active contracts found.</p>
+              <p style={{ fontSize: 14, marginTop: 8 }}>When you win a bid and the client hires you, the contract will appear here.</p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: 16 }}>
+              {activeContracts.map(contract => (
+                <div key={contract._id} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 4 }}>{contract.project?.title || "Project"}</h3>
+                    <p style={{ fontSize: 14, color: "#6b7280" }}>Client: {contract.client?.name}</p>
+                    <p style={{ fontSize: 14, color: "#6b7280" }}>Agreed Amount: <span style={{ color: "#16a34a", fontWeight: 600 }}>${contract.agreedAmount}</span></p>
+                  </div>
+                  <button 
+                    onClick={() => navigate('/deliver-work', { state: { contract } })}
+                    style={{ background: "#f97316", color: "#fff", padding: "8px 16px", borderRadius: 6, fontWeight: 600, border: "none", cursor: "pointer" }}
+                  >
+                    Deliver Work
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {activeNav === "Messages" && (
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px" }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: "#111827", marginBottom: 20 }}>Messages</h2>
-          <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", display: "grid", gridTemplateColumns: "300px 1fr", minHeight: 600 }}>
-            <div style={{ borderRight: "1px solid #e5e7eb" }}>
-              <div style={{ padding: 16, borderBottom: "1px solid #e5e7eb" }}>
-                <input placeholder="Search messages..." style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #e5e7eb", outline: "none" }} />
-              </div>
-              <div style={{ padding: 40, textAlign: "center", color: "#9ca3af", fontSize: 14 }}>
-                No active conversations
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: 40, color: "#9ca3af", background: "#f9fafb" }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>💬</div>
-              <p>Select a conversation to start messaging</p>
-            </div>
-          </div>
-        </div>
-      )}
+
 
     </div>
   );

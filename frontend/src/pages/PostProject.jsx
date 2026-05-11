@@ -195,7 +195,11 @@ const PostProject = () => {
                   label={<span style={{ ...labelStyle, fontSize: '0.85rem' }}><CalendarOutlined style={{ marginRight: 4, color: '#E85D24' }} />Deadline</span>}
                   style={{ marginBottom: 0 }}
                 >
-                  <DatePicker id="post-deadline" style={{ borderRadius: 8, width: '100%' }} />
+                  <DatePicker
+                    id="post-deadline"
+                    style={{ borderRadius: 8, width: '100%' }}
+                    disabledDate={(current) => current && current.isBefore(new Date(), 'day')}
+                  />
                 </Form.Item>
               </div>
             </div>

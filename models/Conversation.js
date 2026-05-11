@@ -16,6 +16,10 @@ const conversationSchema = new mongoose.Schema(
     lastMessageTime: {
       type: Date,
     },
+    project: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+    },
   },
   { 
     timestamps: true 

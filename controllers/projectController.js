@@ -1,312 +1,346 @@
-const Project = require("../models/Project");
-const Bid = require("../models/Bid");
+const Project  = require('../models/Project');
+const Bid      = require('../models/Bid');
+const Contract     = require('../models/Contract');
+const Conversation = require('../models/Conversation');
+const Delivery     = require('../models/Delivery');
+const Notification = require('../models/Notification');
 
-// Create a new project
+// ── Create project (client) ───────────────────────────────────────────────────
 const createProject = async (req, res) => {
   try {
     const { title, description, budget, requiredSkills, deadline, category } = req.body;
 
-    const forbiddenWords = ["assignment", "homework"];
-    const containsForbidden = forbiddenWords.some((word) =>
-      description.toLowerCase().includes(word)
-    );
-
-    if (containsForbidden) {
-      return res.status(400).json({
-        success: false,
-        message: "Description cannot contain 'assignment' or 'homework'",
-      });
+    const forbidden = ['assignment', 'homework'];
+    if (forbidden.some(w => description.toLowerCase().includes(w))) {
+      return res.status(400).json({ success: false, message: "Description cannot contain 'assignment' or 'homework'" });
     }
 
-    const validCategories = ["tutoring", "design", "development", "writing"];
+    const validCategories = ['tutoring', 'design', 'development', 'writing'];
     if (!validCategories.includes(category)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid category. Must be one of: " + validCategories.join(", "),
-      });
+      return res.status(400).json({ success: false, message: 'Invalid category. Must be one of: ' + validCategories.join(', ') });
+    }
+
+    if (deadline) {
+      const dl = new Date(deadline);
+      if (isNaN(dl.getTime()) || dl <= new Date()) {
+        return res.status(400).json({ success: false, message: 'Deadline must be a future date' });
+      }
     }
 
     const project = new Project({
       client: req.user.id || req.user._id,
-      title,
-      description,
-      budget,
-      requiredSkills,
-      deadline,
-      category,
+      title, description, budget, requiredSkills, deadline, category,
     });
 
     await project.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Project created successfully",
-      project,
-    });
+    res.status(201).json({ success: true, message: 'Project created successfully', project });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to create project",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to create project', error: error.message });
   }
 };
 
-// Get my projects
+// ── Get ALL open projects (freelancer browse) ─────────────────────────────────
+const getAllProjects = async (req, res) => {
+  try {
+    const { search } = req.query;
+    const filter = { status: 'open' };
+    if (search) {
+      filter.$or = [
+        { title:       { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
+    const projects = await Project.find(filter)
+      .populate('client', 'name')
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, projects });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch projects', error: error.message });
+  }
+};
+
+// ── Get MY projects (client) ──────────────────────────────────────────────────
 const getMyProjects = async (req, res) => {
   try {
-    const userId = req.user.id || req.user._id;
-    const projects = await Project.find({ client: userId });
-
-    res.status(200).json({
-      success: true,
-      projects,
-    });
+    const userId   = req.user.id || req.user._id;
+    const projects = await Project.find({ client: userId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, projects });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch projects",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch projects', error: error.message });
   }
 };
 
-// Get project by ID
+// ── Get project by ID ─────────────────────────────────────────────────────────
 const getProjectById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const project = await Project.findById(id).populate("client", "name");
-
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: "Project not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      project,
-    });
+    const project = await Project.findById(req.params.id).populate('client', 'name');
+    if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+    res.status(200).json({ success: true, project });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch project",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch project', error: error.message });
   }
 };
 
-// Update project
+// ── Update project ────────────────────────────────────────────────────────────
 const updateProject = async (req, res) => {
   try {
-    const { id } = req.params;
     const { title, description, budget } = req.body;
-    const userId = req.user.id || req.user._id;
+    const userId  = req.user.id || req.user._id;
+    const project = await Project.findById(req.params.id);
 
-    const project = await Project.findById(id);
+    if (!project)                                            return res.status(404).json({ success: false, message: 'Project not found' });
+    if (project.client.toString() !== userId.toString())    return res.status(403).json({ success: false, message: 'Not authorized' });
+    if (project.status !== 'open')                          return res.status(400).json({ success: false, message: "Only 'open' projects can be edited" });
 
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: "Project not found",
-      });
-    }
-
-    if (project.client.toString() !== userId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized",
-      });
-    }
-
-    if (project.status !== "open") {
-      return res.status(400).json({
-        success: false,
-        message: "Only 'open' projects can be edited",
-      });
-    }
-
-    if (title) project.title = title;
+    if (title)       project.title       = title;
     if (description) project.description = description;
-    if (budget) project.budget = budget;
-
+    if (budget)      project.budget      = budget;
     await project.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Project updated successfully",
-      project,
-    });
+    res.status(200).json({ success: true, message: 'Project updated', project });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to update project",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to update project', error: error.message });
   }
 };
 
-// Delete project
+// ── Delete project ────────────────────────────────────────────────────────────
 const deleteProject = async (req, res) => {
   try {
-    const { id } = req.params;
-    const userId = req.user.id || req.user._id;
+    const userId  = req.user.id || req.user._id;
+    const project = await Project.findById(req.params.id);
 
-    const project = await Project.findById(id);
+    if (!project)                                         return res.status(404).json({ success: false, message: 'Project not found' });
+    if (project.client.toString() !== userId.toString()) return res.status(403).json({ success: false, message: 'Not authorized' });
 
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: "Project not found",
-      });
-    }
-
-    if (project.client.toString() !== userId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized",
-      });
-    }
-
-    await Project.findByIdAndDelete(id);
-
-    res.status(200).json({
-      success: true,
-      message: "Project deleted successfully",
-    });
+    await Project.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Project deleted' });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete project",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to delete project', error: error.message });
   }
 };
 
-// Update project status
+// ── Update project status ─────────────────────────────────────────────────────
 const updateProjectStatus = async (req, res) => {
   try {
-    const { id } = req.params;
     const { status } = req.body;
-    const userId = req.user.id || req.user._id;
+    const userId     = req.user.id || req.user._id;
 
-    const validStatuses = ["in_progress", "completed"];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status",
-      });
+    if (!['in_progress', 'completed'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const project = await Project.findById(id);
-
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: "Project not found",
-      });
-    }
-
-    if (project.client.toString() !== userId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized",
-      });
-    }
+    const project = await Project.findById(req.params.id);
+    if (!project)                                         return res.status(404).json({ success: false, message: 'Project not found' });
+    if (project.client.toString() !== userId.toString()) return res.status(403).json({ success: false, message: 'Not authorized' });
 
     project.status = status;
     await project.save();
-
-    res.status(200).json({
-      success: true,
-      message: `Project status updated to ${status}`,
-      project,
-    });
+    res.status(200).json({ success: true, message: `Status updated to ${status}`, project });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to update status",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to update status', error: error.message });
   }
 };
 
-// Get project bids
+// ── Get bids for a project ────────────────────────────────────────────────────
 const getProjectBids = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const bids = await Bid.find({ project: id }).populate("freelancer", "name");
-
-    res.status(200).json({
-      success: true,
-      bids,
-    });
+    const bids = await Bid.find({ project: req.params.id })
+      .populate('freelancer', 'name email department academicYear');
+    res.status(200).json({ success: true, bids });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch bids",
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch bids', error: error.message });
   }
 };
 
-// Accept bid
+// ── Place a bid (freelancer) ──────────────────────────────────────────────────
+const placeBid = async (req, res) => {
+  try {
+    const { bidAmount, coverLetter } = req.body;
+    const freelancerId = req.user.id || req.user._id;
+    const project = await Project.findById(req.params.id);
+
+    if (!project)                  return res.status(404).json({ success: false, message: 'Project not found' });
+    if (project.status !== 'open') return res.status(400).json({ success: false, message: 'Project is no longer accepting bids' });
+    if (!bidAmount)                return res.status(400).json({ success: false, message: 'bidAmount is required' });
+    if (Number(bidAmount) <= 0)    return res.status(400).json({ success: false, message: 'Bid amount must be a positive number' });
+
+    // Prevent duplicate bids
+    const existing = await Bid.findOne({ project: req.params.id, freelancer: freelancerId });
+    if (existing) return res.status(409).json({ success: false, message: 'You have already placed a bid on this project' });
+
+    const bid = new Bid({ project: req.params.id, freelancer: freelancerId, bidAmount, coverLetter: coverLetter || '' });
+    await bid.save();
+
+    await Project.findByIdAndUpdate(req.params.id, { $push: { bids: bid._id } });
+
+    res.status(201).json({ success: true, message: 'Bid placed successfully', bid });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to place bid', error: error.message });
+  }
+};
+
+// ── Accept a bid → creates a Contract ────────────────────────────────────────
 const acceptProjectBid = async (req, res) => {
   try {
-    const { id } = req.params;
     const { bidId } = req.body;
-    const userId = req.user.id || req.user._id;
+    const userId    = req.user.id || req.user._id;
+    const projectId = req.params.id;
 
-    const project = await Project.findById(id);
+    console.log(`[AcceptBid] Project: ${projectId}, Bid: ${bidId}, User: ${userId}`);
 
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: "Project not found",
-      });
-    }
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
 
+    console.log(`[AcceptBid] Project Owner: ${project.client}`);
     if (project.client.toString() !== userId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized",
-      });
+      return res.status(403).json({ success: false, message: 'Not authorized to accept bids for this project' });
     }
 
-    project.acceptedBid = bidId;
-    project.status = "in_progress";
+    const bid = await Bid.findById(bidId);
+    if (!bid) return res.status(404).json({ success: false, message: 'Bid not found' });
+
+    console.log(`[AcceptBid] Bid Freelancer: ${bid.freelancer}, Amount: ${bid.bidAmount}`);
+
+    // Create contract
+    const contract = new Contract({
+      project:      project._id,
+      client:       project.client,
+      freelancer:   bid.freelancer,
+      bid:          bid._id,
+      agreedAmount: bid.bidAmount,
+      status:       'active'
+    });
+    await contract.save();
+    console.log(`[AcceptBid] Contract created: ${contract._id}`);
+
+    // Update project
+    project.acceptedBid = bid._id;
+    project.status      = 'in_progress';
     await project.save();
 
-    await Bid.findByIdAndUpdate(bidId, { status: "accepted" });
+    // Mark bids
+    await Bid.findByIdAndUpdate(bidId, { status: 'accepted' });
+    await Bid.updateMany({ project: project._id, _id: { $ne: bidId } }, { status: 'rejected' });
 
-    await Bid.updateMany(
-      { project: id, _id: { $ne: bidId } },
-      { status: "rejected" }
-    );
+    // Create conversation if it doesn't exist
+    try {
+      let conversation = await Conversation.findOne({
+        participants: { $all: [project.client, bid.freelancer] },
+      });
+      
+      if (!conversation) {
+        await Conversation.create({
+          participants: [project.client, bid.freelancer],
+          lastMessage: "Project started! You can now communicate here.",
+          lastMessageTime: new Date(),
+        });
+        console.log(`[AcceptBid] Conversation created`);
+      }
+    } catch (convErr) {
+      console.error(`[AcceptBid] Conversation error (non-fatal):`, convErr.message);
+    }
 
-    res.status(200).json({
-      success: true,
-      message: "Bid accepted successfully",
-      project,
-    });
+    // Create Notification for the Freelancer
+    try {
+      await Notification.create({
+        user: bid.freelancer,
+        message: `The client has accepted your bid for project: ${project.title}. You can now begin work!`,
+        type: 'bid_accepted',
+        link: '/deliver-work', // They can go to Deliver Work page (or freelancer-dashboard)
+      });
+    } catch (notifErr) {
+      console.error(`[AcceptBid] Notification error (non-fatal):`, notifErr.message);
+    }
+
+    res.status(200).json({ success: true, message: 'Bid accepted — contract created', contract, project });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to accept bid",
-      error: error.message,
+    console.error(`[AcceptBid] FATAL ERROR:`, error);
+    res.status(500).json({ success: false, message: 'Failed to accept bid', error: error.message });
+  }
+};
+
+// ── Get my contracts ──────────────────────────────────────────────────────────
+const getMyContracts = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const contracts = await Contract.find({
+      $or: [{ client: userId }, { freelancer: userId }],
+    })
+      .populate('project', 'title description status')
+      .populate('client',     'name email')
+      .populate('freelancer', 'name email')
+      .populate('bid', 'bidAmount coverLetter')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, contracts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch contracts', error: error.message });
+  }
+};
+
+// ── Submit work delivery (freelancer) ──────────────────────────────────────
+const submitDelivery = async (req, res) => {
+  try {
+    const { projectId, message } = req.body;
+    const freelancerId = req.user.id || req.user._id;
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+    // Check if project status is 'in_progress'
+    if (project.status !== 'in_progress') {
+      return res.status(400).json({ success: false, message: 'Project is not in progress' });
+    }
+
+    const files = req.files ? req.files.map(file => ({
+      fileName: file.originalname,
+      fileSize: file.size > 1024 * 1024 
+        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
+        : `${(file.size / 1024).toFixed(0)} KB`,
+      fileUrl: `http://localhost:5000/uploads/${file.filename}`
+    })) : [];
+
+    const delivery = new Delivery({
+      project: projectId,
+      freelancer: freelancerId,
+      message,
+      files
     });
+
+    await delivery.save();
+    res.status(201).json({ success: true, message: 'Work submitted successfully', delivery });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to submit work', error: error.message });
+  }
+};
+
+// ── Get project deliveries (client/freelancer) ──────────────────────────────
+const getProjectDeliveries = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const deliveries = await Delivery.find({ project: projectId })
+      .populate('freelancer', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, deliveries });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch deliveries', error: error.message });
   }
 };
 
 module.exports = {
   createProject,
+  getAllProjects,
   getMyProjects,
   getProjectById,
   updateProject,
   deleteProject,
   updateProjectStatus,
   getProjectBids,
+  placeBid,
   acceptProjectBid,
+  getMyContracts,
+  submitDelivery,
+  getProjectDeliveries
 };
+
