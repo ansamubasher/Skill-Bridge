@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const messageSchema = new mongoose.Schema(
   {
@@ -7,24 +7,23 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
     receiver: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
-    project: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Project",
-    },
-
-    message: {
+    content: {
       type: String,
       required: true,
     },
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  { 
+    timestamps: true // This will automatically add and manage the 'createdAt' and 'updatedAt' fields
+  }
 );
 
-export default mongoose.model("Message", messageSchema);
+module.exports = mongoose.model("Message", messageSchema);

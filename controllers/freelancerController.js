@@ -3,7 +3,7 @@ const user = require('../models/User');
 const bids = require('../models/Bid');
 // check i f i need to valiada teh usein every rqust
 const seedDB = require('../seed/user_dummy');
-
+ 
 // this will b e for the freelancer dashboard scrren
 // it will display the relevant projects
 const DashboardProjects = async (req, res) => {

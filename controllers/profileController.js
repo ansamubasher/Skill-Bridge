@@ -6,16 +6,41 @@ const getMyProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Find user's profile
+    // Find user
     const user = await User.findById(userId);
-    if (!user ) {
+    if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Profile not found",
+        message: "User not found",
       });
     }
 
-    const profile = await Profile.findById(user).populate("completedProjects");
+    let profile;
+    if (!user.profile) {
+      // Check if profile exists but isn't linked
+      profile = await Profile.findOne({ user: userId }).populate("completedProjects");
+      
+      if (!profile) {
+        // Create profile on the fly if it truly doesn't exist
+        profile = new Profile({ user: user._id });
+        await profile.save();
+      }
+      
+      user.profile = profile._id;
+      await user.save();
+    } else {
+      profile = await Profile.findById(user.profile).populate("completedProjects");
+      if (!profile) {
+        // Check if there is another profile linked to this user
+        profile = await Profile.findOne({ user: userId }).populate("completedProjects");
+        if (!profile) {
+          profile = new Profile({ user: user._id });
+          await profile.save();
+        }
+        user.profile = profile._id;
+        await user.save();
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -83,20 +108,43 @@ const getProfileById = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
-    const { bio, portfolio, availability, coverImage } = req.body;
+    const { bio, portfolio, availability, coverImage, skills } = req.body;
     const userId = req.user.id;
 
     const user = await User.findById(userId);
-    if (!user || !user.profile) {
+    if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Profile not found",
+        message: "User not found",
       });
+    }
+    
+    if (!user.profile) {
+      let existingProfile = await Profile.findOne({ user: userId });
+      if (!existingProfile) {
+        existingProfile = new Profile({ user: user._id });
+        await existingProfile.save();
+      }
+      user.profile = existingProfile._id;
+      await user.save();
+    } else {
+      // If user.profile is an ID but document might be missing, verify it
+      const existingProfile = await Profile.findById(user.profile);
+      if (!existingProfile) {
+        let replacementProfile = await Profile.findOne({ user: userId });
+        if (!replacementProfile) {
+          replacementProfile = new Profile({ user: user._id });
+          await replacementProfile.save();
+        }
+        user.profile = replacementProfile._id;
+        await user.save();
+      }
     }
 
     const updateData = {};
     if (bio !== undefined) updateData.bio = bio;
     if (portfolio !== undefined) updateData.portfolio = portfolio;
+    if (skills !== undefined) updateData.skills = skills;
     if (availability) updateData.availability = availability;
     if (coverImage !== undefined) updateData.coverImage = coverImage;
 
@@ -119,6 +167,7 @@ const updateProfile = async (req, res) => {
       profile: updatedProfile,
     });
   } catch (error) {
+    console.error("updateProfile Error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update profile",

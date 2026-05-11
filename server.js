@@ -1,13 +1,22 @@
 require('dotenv').config();
+// Fix: Node.js 17+ on Windows breaks SRV DNS lookups (used by mongodb+srv://)
+// This forces IPv4-first resolution, which matches OS behavior
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
 const express = require('express');
 const mongoose = require('mongoose');
 
 const freelancerRoutes = require('./routes/freelancer');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const paymentRoutes = require('./routes/paymentRoute');
+const messageRoutes = require('./routes/messageRoutes');
+const cors = require('cors');
+
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -17,18 +26,18 @@ app.use((req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect('mongodb+srv://ansamubasher_db_user:test123@cluster0.o5xuys6.mongodb.net/skillbridge?retryWrites=true&w=majority')
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected, state:', mongoose.connection.readyState);
 
     // ✅ Register ALL routes AFTER DB is ready
     app.use('/auth', authRoutes);
-    // //app.use('/profile', profileRoutes);
+    app.use('/profiles', profileRoutes);
+    app.use('/users', userRoutes);
     // //app.use('/freelancer', freelancerRoutes);
-    // app.use('/client', clientRoutes); // Note: clientRoutes is undefined in the code above, but assuming you want to mount it or it was removed earlier.
-
-// after client routes
-app.use('/payments', paymentRoutes);
+    // app.use('/client', clientRoutes); 
+    app.use('/payments', paymentRoutes);
+    app.use('/messages', messageRoutes);
 
     // ✅ Start server LAST
     app.listen(PORT, () => {
@@ -47,3 +56,9 @@ app.use('/payments', paymentRoutes);
 mongoose.connection.on('error', (err) => {
   console.log('Mongoose error:', err.message);
 });
+
+
+
+
+
+``

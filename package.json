@@ -12,7 +12,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "node server.js"
-},
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

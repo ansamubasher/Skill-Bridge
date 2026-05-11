@@ -15,7 +15,7 @@ const axiosInstance = axios.create({
 // Request interceptor — attach Bearer token for authenticateToken middleware
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('sb_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

@@ -1,86 +1,45 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Badge, Avatar, Tooltip } from 'antd';
-import {
-  BellOutlined,
-  QuestionCircleOutlined,
-  UserOutlined,
-  DownOutlined,
-} from '@ant-design/icons';
+import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { HelpCircle, Bell, ChevronDown } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+import '../pages/Profile.css';
 
-/**
- * SkillBridge top Navbar — Client variant
- * Matches the Figma design: logo + nav links (orange) + icon cluster + avatar
- */
-const Navbar = () => {
+const Navbar = ({ hideLinks }) => {
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
-    <nav className="sb-navbar">
-      {/* Logo */}
-      <Link to="/dashboard" style={{ textDecoration: 'none', flexShrink: 0 }}>
-        <span style={{ fontSize: '1.35rem', letterSpacing: '-0.5px' }}>
-          <span className="sb-logo-skill">Skill</span>
-          <span className="sb-logo-bridge">Bridge</span>
-        </span>
-      </Link>
-
-      {/* Primary nav links */}
-      <div className="sb-nav-links">
-        <Link to="/post-project" className="sb-nav-link" id="nav-post-job">
-          Post a job
-        </Link>
-
-        <div
-          className="sb-nav-link-dark flex items-center gap-1 cursor-pointer select-none"
-          id="nav-find-freelancers"
-        >
-          Find Freelancers <DownOutlined style={{ fontSize: 11 }} />
-        </div>
-
-        <div
-          className="sb-nav-link-dark flex items-center gap-1 cursor-pointer select-none"
-          id="nav-deliver-work"
-        >
-          Deliver work <DownOutlined style={{ fontSize: 11 }} />
-        </div>
-
-        <div
-          className="sb-nav-link-dark flex items-center gap-1 cursor-pointer select-none"
-          id="nav-manage-finances"
-        >
-          Manage Finances <DownOutlined style={{ fontSize: 11 }} />
-        </div>
-
-        <span className="sb-nav-link-dark cursor-pointer" id="nav-messages">
-          Messages
-        </span>
+    <nav className="navbar">
+      <div className="nav-left">
+        <h2 className="nav-logo">
+          <span style={{ color: 'var(--primary)' }}>S</span>kill<span style={{ color: 'var(--primary)' }}>B</span>ridge
+        </h2>
+        {!hideLinks && (
+          <ul className="nav-links">
+            <li>Find work <ChevronDown size={16} /></li>
+            <li>Deliver work <ChevronDown size={16} /></li>
+            <li>Manage Finances <ChevronDown size={16} /></li>
+            <li>Messages</li>
+          </ul>
+        )}
       </div>
-
-      {/* Right-side icons */}
-      <div className="flex items-center gap-4 ml-auto">
-        <Tooltip title="Help">
-          <QuestionCircleOutlined
-            id="nav-help"
-            style={{ fontSize: 20, color: '#6b7280', cursor: 'pointer' }}
-          />
-        </Tooltip>
-
-        <Tooltip title="Notifications">
-          <Badge count={3} size="small" color="#E85D24">
-            <BellOutlined
-              id="nav-notifications"
-              style={{ fontSize: 20, color: '#6b7280', cursor: 'pointer' }}
-            />
-          </Badge>
-        </Tooltip>
-
-        <Avatar
-          id="nav-avatar"
-          icon={<UserOutlined />}
-          style={{ background: '#E85D24', cursor: 'pointer' }}
-          onClick={() => navigate('/dashboard')}
-        />
+      
+      <div className="nav-right">
+        <HelpCircle className="nav-icon" />
+        <Bell className="nav-icon" />
+        
+        <div className="user-menu" onClick={handleLogout} title="Click to logout for now">
+          {/* Avatar placeholder */}
+          <div className="avatar-small">
+            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          </div>
+          <ChevronDown size={16} />
+        </div>
       </div>
     </nav>
   );
